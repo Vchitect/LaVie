@@ -60,8 +60,8 @@ Edit `text_prompt` in `configs/sample.yaml` to change prompt, results will be sa
 
 <tr>
   <td>a Corgi walking in the park at sunrise, oil painting style</td>
-  <td>a panda taking a selfie, 2k, high_quality</td>
-  <td>a polar bear playing drum kit in NYC Times Square, 4k, high_resolution</td>      
+  <td>a panda taking a selfie, 2k, high quality</td>
+  <td>a polar bear playing drum kit in NYC Times Square, 4k, high resolution</td>      
 </tr>
 
 <tr>
