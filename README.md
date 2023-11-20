@@ -4,7 +4,7 @@ This repository is the official PyTorch implementation of [LaVie](https://arxiv.
 
 **LaVie** is a Text-to-Video (T2V) generation framework, and main part of video generation system [Vchitect](http://vchitect.intern-ai.org.cn/).
 
-[![arXiv](https://img.shields.io/badge/arXiv-2307.04725-b31b1b.svg)](https://arxiv.org/abs/2309.15103)
+[![arXiv](https://img.shields.io/badge/arXiv-2309.15103-b31b1b.svg)](https://arxiv.org/abs/2309.15103)
 [![Project Page](https://img.shields.io/badge/Project-Website-green)](https://vchitect.github.io/LaVie-project/)
 <!--
 [![Open in OpenXLab](https://cdn-static.openxlab.org.cn/app-center/openxlab_app.svg)]()
