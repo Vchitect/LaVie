@@ -107,6 +107,11 @@ The default input video path is `./res/base` and results will be saved under `./
 }
 ```
 
+## Contact Us
+**Yaohui Wang**: [wangyaohui@pjlab.org.cn](mailto:wangyaohui@pjlab.org.cn)  
+**Xinyuan Chen**: [chenxinyuan@pjlab.org.cn](mailto:chenxinyuan@pjlab.org.cn)  
+**Xin Ma**: [xin.ma1@monash.edu](mailto:xin.ma1@monash.edu)
+
 ## Acknowledgements
 The code is built upon [diffusers](https://github.com/huggingface/diffusers) and [Stable Diffusion](https://github.com/CompVis/stable-diffusion), we thank all the contributors for open-sourcing. 
 
