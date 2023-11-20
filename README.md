@@ -49,7 +49,35 @@ Run following command to generate videos from base T2V model.
 cd base
 python pipelines/sample.py --config configs/sample.yaml
 ```
-Edit `text_prompt` in `configs/sample.yaml` to change prompt, results will be saved under `./res/base`. 
+Edit `text_prompt` in `configs/sample.yaml` to change prompt, results will be saved under `./res/base`. You may obtain following results. You could also modify `seed` in `configs/sample.yaml` for different results.
+
+<table class="center">
+<tr>
+  <td><img src="assets/a_Corgi_walking_in_the_park_at_sunrise,_oil_painting_style.gif"></td>
+  <td><img src="assets/a_panda_taking_a_selfie,_2k,_high_quality.gif"></td>
+  <td><img src="assets/a_polar_bear_playing_drum_kit_in_NYC_Times_Square,_4k,_high_resolution.gif"></td>      
+</tr>
+
+<tr>
+  <td>a Corgi walking in the park at sunrise, oil painting style</td>
+  <td>a panda taking a selfie, 2k, high_quality</td>
+  <td>a polar bear playing drum kit in NYC Times Square, 4k, high_resolution</td>      
+</tr>
+
+<tr>
+  <td><img src="assets/a_shark_swimming_in_clear_Carribean_ocean,_2k,_high_quality.gif"></td>
+  <td><img src="assets/a_teddy_bear_walking_on_the_street,_2k,_high_quality.gif"></td>
+  <td><img src="assets/jungle_river_at_sunset,_ultra_quality.gif"></td>
+</tr>
+
+<tr>
+  <td>a shark swimming in clear Carribean ocean, 2k, high quality</td>
+  <td>a teddy bear walking on the street, 2k, high quality</td>
+  <td>jungle, river, at sunset, ultra quality</td>
+</tr>
+
+</table>
+
 
 ### Step2 (optional). Video Interpolation
 Run following command to conduct video interpolation.
