@@ -1,0 +1,32 @@
+# path:
+output_folder: "../res/base/"
+pretrained_path: "../pretrained_models"
+
+# model config: 
+model: UNet
+video_length: 16
+image_size: [320, 512]
+
+# beta schedule
+beta_start: 0.0001
+beta_end: 0.02
+beta_schedule: "linear"
+
+# model speedup
+use_compile: False
+use_fp16: True
+
+# sample config:
+seed: 500
+run_time: 0
+guidance_scale: 7.0
+sample_method: 'ddpm'
+num_sampling_steps: 250
+text_prompt: [
+              'a teddy bear walking on the street, 2k, high quality',
+              'a panda taking a selfie, 2k, high quality',
+              'a polar bear playing drum kit in NYC Times Square, 4k, high resolution',
+              'jungle river at sunset, ultra quality',
+              'a shark swimming in clear Carribean ocean, 2k, high quality',
+              'a Corgi walking in the park at sunrise, oil painting style'
+       ] 

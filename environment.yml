@@ -1,0 +1,26 @@
+name: lavie
+channels:
+  - pytorch
+  - nvidia
+dependencies:
+  - python=3.11.3
+  - pytorch=2.0.1
+  - pytorch-cuda=11.7
+  - torchvision=0.15.2
+  - pip:
+      - accelerate==0.19.0
+      - av==10.0.0
+      - decord==0.6.0
+      - diffusers[torch]==0.16.0
+      - einops==0.6.1
+      - ffmpeg==1.4
+      - imageio==2.31.1
+      - imageio-ffmpeg==0.4.9
+      - pandas==2.0.1
+      - timm==0.6.13
+      - tqdm==4.65.0
+      - transformers==4.28.1
+      - xformers==0.0.20
+      - omegaconf==2.3.0
+      - natsort==8.4.0
+      - rotary_embedding_torch

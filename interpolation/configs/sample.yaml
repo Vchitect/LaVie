@@ -1,0 +1,36 @@
+args:
+  input_folder: "../res/base/"
+  pretrained_path: "../pretrained_models"
+  output_folder: "../res/interpolation/"
+  seed_list:
+    - 3418
+
+  fps_list:
+    - 24
+  
+  # model config: 
+  model: TSR
+  num_frames: 61
+  image_size:  [320, 512]
+  num_sampling_steps: 50
+  vae: mse
+  use_timecross_transformer: False
+  frame_interval: 1
+
+  # sample config:
+  seed: 0
+  cfg_scale: 4.0
+  run_time: 12
+  use_compile: False
+  enable_xformers_memory_efficient_attention: True
+  num_sample: 1
+
+  additional_prompt: ", 4k."
+  negative_prompt: "None"
+  do_classifier_free_guidance: True
+  use_ddim_sample_loop: True
+  
+  researve_frame: 3
+  mask_type: "tsr"
+  use_concat: True
+  copy_no_mask: True
