@@ -170,7 +170,7 @@ class Predictor(BasePredictor):
         width: int = Input(description="Width of output video.", default=512),
         height: int = Input(description="Height of output video", default=320),
         num_inference_steps: int = Input(
-            description="Number of denoising steps", default=250
+            description="Number of denoising steps", default=50
         ),
         guidance_scale: float = Input(
             description="Scale for classifier-free guidance", default=7.0
