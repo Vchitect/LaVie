@@ -78,6 +78,7 @@ Edit `text_prompt` in `configs/sample.yaml` to change prompt, results will be sa
 
 </table>
 
+Feel free to try different prompts, and share with us which one you like it most!
 
 ### Step2 (optional). Video Interpolation
 Run following command to conduct video interpolation.
