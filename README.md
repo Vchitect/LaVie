@@ -110,15 +110,6 @@ python sample.py --config configs/sample.yaml
 ```
 The default input video path is `./res/base` and results will be saved under `./res/vsr`. You could modify default `input_path` with `YOUR_INPUT_FOLDER` in `configs/sample.yaml`. Smiliar to Step2, input videos should be named as `prompt1.mp4`, `prompt2.mp4`, ... and put under `YOUR_INPUT_FOLDER`. Launching the code will process all the input videos in `input_folder`.
 
-<table class="center">
-        <tr>
-        <td><img src="assets/vsr/a_shark_swimming_in_clear_Carribean_ocean,_2k,_high_quality.gif"></td>
-        </tr>
-        <tr>
-        <td>a shark swimming in clear Carribean ocean, 2k, high quality</td>
-        </tr>
-</table>
-
 ## BibTex
 ```bibtex
 @article{wang2023lavie,
