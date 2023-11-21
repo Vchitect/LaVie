@@ -22,7 +22,7 @@ use_seed: True
 run_time: 0
 guidance_scale: 7.0
 sample_method: 'ddpm'
-num_sampling_steps: 250
+num_sampling_steps: 50
 text_prompt: [
               'a teddy bear walking on the street, 2k, high quality',
               'a panda taking a selfie, 2k, high quality',
