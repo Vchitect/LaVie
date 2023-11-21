@@ -95,9 +95,9 @@ The default input video path is `./res/base`, results will be saved under `./res
 </tr>
         
 <tr>
-  <td>a teddy bear walking on the street, 2k, high_quality></td>
-  <td>a Corgi walking in the park at sunrise, oil painting style></td>
-  <td>a panda taking a selfie, 2k, high quality></td>   
+  <td>a teddy bear walking on the street, 2k, high_quality</td>
+  <td>a Corgi walking in the park at sunrise, oil painting style</td>
+  <td>a panda taking a selfie, 2k, high quality</td>   
 </tr>
 
 </table>
@@ -112,10 +112,10 @@ The default input video path is `./res/base` and results will be saved under `./
 
 <table class="center">
         <tr>
-        <img src="assets/vsr/a_shark_swimming_in_clear_Carribean_ocean,_2k,_high_quality.gif">
+        <td><img src="assets/vsr/a_shark_swimming_in_clear_Carribean_ocean,_2k,_high_quality.gif"></td>
         </tr>
         <tr>
-        a shark swimming in clear Carribean ocean, 2k, high quality>
+        <td>a shark swimming in clear Carribean ocean, 2k, high quality</td>
         </tr>
 </table>
 
