@@ -223,7 +223,7 @@ def main(args):
 
 			print(f'state_dict["conv_in.weight"].shape = {state_dict["conv_in.weight"].shape}') # [320, 8, 3, 3]
 			print('loading succeed')
-			# model.load_state_dict(state_dict)
+			model.load_state_dict(state_dict)
 
 			torch.manual_seed(args.seed)
 			torch.cuda.manual_seed(args.seed)
