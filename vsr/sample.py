@@ -20,7 +20,7 @@ from diffusers import DDIMScheduler
 from omegaconf import OmegaConf
 
 
-def main(args)
+def main(args):
 
 	device = "cuda" 
 
