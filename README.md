@@ -50,7 +50,7 @@ Run following command to generate videos from base T2V model.
 cd base
 python pipelines/sample.py --config configs/sample.yaml
 ```
-Edit `text_prompt` in `configs/sample.yaml` to change prompt, results will be saved under `./res/base`. You may obtain following results. You could also set `use_seed=False` in `configs/sample.yaml` for random generation.
+Edit `text_prompt` in `configs/sample.yaml` to change prompt, results will be saved under `./res/base`. You may obtain following results. You could also set `use_seed: False` in `configs/sample.yaml` for random generation.
 
 <table class="center">
 <tr>
