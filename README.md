@@ -2,7 +2,7 @@
 
 This repository is the official PyTorch implementation of [LaVie](https://arxiv.org/abs/2309.15103).
 
-**LaVie** is a Text-to-Video (T2V) generation framework, and main part of video generation system [Vchitect](http://vchitect.intern-ai.org.cn/).
+**LaVie** is a Text-to-Video (T2V) generation framework, and main part of video generation system [Vchitect](http://vchitect.intern-ai.org.cn/). You can also check our Image-to-Video (I2V) model [SEINE](https://github.com/Vchitect/SEINE).
 
 
 [![arXiv](https://img.shields.io/badge/arXiv-2309.15103-b31b1b.svg)](https://arxiv.org/abs/2309.15103)
