@@ -122,6 +122,15 @@ The default input video path is `./res/base` and results will be saved under `./
 }
 ```
 
+```bibtex
+@article{chen2023seine,
+title={SEINE: Short-to-Long Video Diffusion Model for Generative Transition and Prediction},
+author={Chen, Xinyuan and Wang, Yaohui and Zhang, Lingjun and Zhuang, Shaobin and Ma, Xin and Yu, Jiashuo and Wang, Yali and Lin, Dahua and Qiao, Yu and Liu, Ziwei},
+journal={arXiv preprint arXiv:2310.20700},
+year={2023}
+}
+```
+
 ## Disclaimer
 We disclaim responsibility for user-generated content. The model was not trained to realistically represent people or events, so using it to generate such content is beyond the model's capabilities. It is prohibited for pornographic, violent and bloody content generation, and to generate content that is demeaning or harmful to people or their environment, culture, religion, etc. Users are solely liable for their actions. The project contributors are not legally affiliated with, nor accountable for users' behaviors. Use the generative model responsibly, adhering to ethical and legal standards.
 
