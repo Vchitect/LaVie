@@ -55,7 +55,7 @@ python pipelines/sample.py --config configs/sample.yaml
 ```
 In **configs/sample.yaml**, arguments for inference:
 
-- **ckpt_path:** Path to the downloaded LaVie models, default is `../pretrained_models`
+- **ckpt_path:** Path to the downloaded LaVie base model, default is `../pretrained_models/lavie_base.pt`
 
 - **pretrained_models:** Path to the downloaded SD1.4, default is `../pretrained_models`
 
