@@ -21,7 +21,7 @@ use_fp16: True
 seed: 400
 use_seed: True
 run_time: 0
-guidance_scale: 7.0
+guidance_scale: 7.5
 sample_method: 'ddpm'
 num_sampling_steps: 50
 text_prompt: [
