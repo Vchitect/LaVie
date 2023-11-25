@@ -22,7 +22,7 @@ conda activate lavie
 ```
 
 ## Download Pre-Trained models
-Download [pre-trained models](https://huggingface.co/YaohuiW/LaVie/tree/main), [stable diffusion 1.4](https://huggingface.co/CompVis/stable-diffusion-v1-4/tree/main), [stable-diffusion-x4-upscaler](https://huggingface.co/stabilityai/stable-diffusion-x4-upscaler/tree/main) to `./pretrained_models`. You should be able to see the following:
+Download pre-trained LaVie models via [huggingface](https://huggingface.co/YaohuiW/LaVie/tree/main), [Stable Diffusion 1.4](https://huggingface.co/CompVis/stable-diffusion-v1-4/tree/main), [stable-diffusion-x4-upscaler](https://huggingface.co/stabilityai/stable-diffusion-x4-upscaler/tree/main) to `./pretrained_models`. You should be able to see the following:
 ```
 ├── pretrained_models
 │   ├── lavie_base.pt
@@ -50,7 +50,29 @@ Run following command to generate videos from base T2V model.
 cd base
 python pipelines/sample.py --config configs/sample.yaml
 ```
-Edit `text_prompt` in `configs/sample.yaml` to change prompt, results will be saved under `./res/base`. You may obtain following results. You could also set `use_seed: False` in `configs/sample.yaml` for random generation.
+In `configs/sample.yaml`, arguments for inference:
+
+- `ckpt_path:` Path to the downloaded LaVie models, default is `../pretrained_models`
+
+- `pretrained_models:` Path to the downloaded SD1.4, default is `../pretrained_models`
+
+- `output_folder:` Path to save generated results, default is `../res/base`
+
+- `use_seed:` flag for seed usage, default is **False** for random generation
+
+- `seed:` Seed to be used, `use_seed` should be True
+
+- `sample_method:` Scheduler to use, default is **ddpm**, options are **ddpm**, **ddim** and **eulerdiscrete**
+
+- `guidance_scale:` CFG scale to be used, default is **7.5**
+
+- `num_sampling_steps:` Denoising steps
+
+- `text_prompt:` Prompt for generation
+
+Following results can be reproduced with the arguments:
+
+`seed:` 400, `sample_method`: ddpm, `guidance_scale:` 7.0, `num_sampling_steps:` 50
 
 <table class="center">
 <tr>
