@@ -1,4 +1,5 @@
 # path:
+ckpt_path: "../pretrained_models/lavie_base.pt"
 output_folder: "../res/base/"
 pretrained_path: "../pretrained_models"
 
