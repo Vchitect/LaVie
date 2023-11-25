@@ -24,7 +24,7 @@ def main(args):
 
 	sd_path = args.pretrained_path + "/stable-diffusion-v1-4"
 	unet = get_models(args, sd_path).to(device, dtype=torch.float16)
-	state_dict = find_model(args.pretrained_path + "/lavie_base.pt")
+	state_dict = find_model(args.ckpt_path)
 	unet.load_state_dict(state_dict)
 	
 	vae = AutoencoderKL.from_pretrained(sd_path, subfolder="vae", torch_dtype=torch.float16).to(device)
