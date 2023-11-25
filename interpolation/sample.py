@@ -47,7 +47,6 @@ def get_input(args):
 	input_path = args.input_path
 	transform_video = transforms.Compose([
 			video_transforms.ToTensorVideo(), # TCHW
-			# video_transforms.CenterCropResizeVideo((args.image_h, args.image_w)),
 			video_transforms.ResizeVideo((args.image_h, args.image_w)),
 			transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], inplace=True)
 		])
@@ -191,7 +190,7 @@ def main(args):
 		# device = "cpu"
 		
 		ckpt_path = args.pretrained_path + "/lavie_interpolation.pt"
-		sd_path = args.pretrained_path + "/stable-diffusion-v1-4"	
+		sd_path = args.ckpt_path
 		for ckpt in [ckpt_path]:
 
 			ckpt_num = str(ckpt_path).zfill(7)
