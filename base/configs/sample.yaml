@@ -18,8 +18,7 @@ use_compile: False
 use_fp16: True
 
 # sample config:
-seed: 400
-use_seed: True
+seed: None #400
 run_time: 0
 guidance_scale: 7.5
 sample_method: 'ddpm'
