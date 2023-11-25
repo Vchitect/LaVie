@@ -39,7 +39,7 @@ def main(args):
 	config['video_condition'] = False
 	pipeline.unet = UNet3DVSRModel.from_config(config)
 
-	pretrained_model = args.pretrained_path + "/lavie_vsr.pt"    
+	pretrained_model = args.ckpt_path
 	checkpoint = torch.load(pretrained_model, map_location="cpu")['ema']
 
 	pipeline.unet.load_state_dict(checkpoint, True) 
