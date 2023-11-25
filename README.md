@@ -36,12 +36,15 @@ Download pre-trained LaVie models via [huggingface](https://huggingface.co/Yaohu
 
 ## Inference
 The inference contains **Base T2V**, **Video Interpolation** and **Video Super-Resolution** three steps. We provide several options to generate videos:
-* **Step1**: 320 x 512 resolution, 16 frames
-* **Step1+Step2**: 320 x 512 resolution, 61 frames
-* **Step1+Step3**: 1280 x 2048 resolution, 16 frames
-* **Step1+Step2+Step3**: 1280 x 2048 resolution, 61 frames
 
-Feel free to try different options:)
+|       |Step1|Step2|Step3|Resolution|Length|
+|-------|-----|-----|-----|----------|------|
+|option1|  ✔  |     |     | 320x512  |  16  |
+|option2|  ✔  |  ✔  |     | 320x512  |  61  |
+|option3|  ✔  |     |  ✔  | 1280x2048|  16  |
+|option4|  ✔  |  ✔  |  ✔  | 1280x2048|  61  |
+
+Feel free to try different options :)
 
 
 ### Step1. Base T2V
@@ -50,29 +53,27 @@ Run following command to generate videos from base T2V model.
 cd base
 python pipelines/sample.py --config configs/sample.yaml
 ```
-In `configs/sample.yaml`, arguments for inference:
+In **configs/sample.yaml**, arguments for inference:
 
-- `ckpt_path:` Path to the downloaded LaVie models, default is `../pretrained_models`
+- **ckpt_path:** Path to the downloaded LaVie models, default is `../pretrained_models`
 
-- `pretrained_models:` Path to the downloaded SD1.4, default is `../pretrained_models`
+- **pretrained_models:** Path to the downloaded SD1.4, default is `../pretrained_models`
 
-- `output_folder:` Path to save generated results, default is `../res/base`
+- **output_folder:** Path to save generated results, default is `../res/base`
 
-- `use_seed:` flag for seed usage, default is **False** for random generation
+- **seed:** Seed to be used, `None` for random generation
 
-- `seed:` Seed to be used, `use_seed` should be True
+- **sample_method:** Scheduler to use, default is `ddpm`, options are `ddpm`, `ddim` and `eulerdiscrete`
 
-- `sample_method:` Scheduler to use, default is **ddpm**, options are **ddpm**, **ddim** and **eulerdiscrete**
+- **guidance_scale:** CFG scale to use, default is `7.5`
 
-- `guidance_scale:` CFG scale to be used, default is **7.5**
+- **num_sampling_steps:** Denoising steps, default is `50`
 
-- `num_sampling_steps:` Denoising steps
-
-- `text_prompt:` Prompt for generation
+- **text_prompt:** Prompt for generation
 
 Following results can be reproduced with the arguments:
 
-`seed:` 400, `sample_method`: ddpm, `guidance_scale:` 7.0, `num_sampling_steps:` 50
+seed: `400`, sample_method: `ddpm`, guidance_scale: `7.0`, num_sampling_steps: `50`
 
 <table class="center">
 <tr>
