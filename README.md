@@ -102,6 +102,23 @@ seed: `400`, sample_method: `ddpm`, guidance_scale: `7.0`, num_sampling_steps: `
 
 </table>
 
+More results
+
+<table class="center">
+<tr>
+  <td><img src="assets/a_cute_raccoon_playing_guitar_in_the_park_at_sunrise,_oil_painting_style.gif"></td>
+  <td><img src="assets/a_teddy_bear_walking_in_the_park_at_sunrise_oil_painting_style.gif"></td>
+  <td><img src="assets/laviea_teddy_bear_reading_a_book_near_a_small_river,_oil_painting_style-.gif"></td>      
+</tr>
+
+<tr>
+  <td>a cute raccoon playing guitar in the park at sunrise, oil painting style</td>
+  <td>a teddy bear walking in the park at sunrise, oil painting style</td>
+  <td>a teddy bear reading a book near a small river, oil painting style</td>      
+</tr>
+
+</table>
+
 Feel free to try different prompts, and share with us which one you like it most!
 
 ### Step2 (optional). Video Interpolation
