@@ -102,9 +102,22 @@ seed: `400`, sample_method: `ddpm`, guidance_scale: `7.0`, num_sampling_steps: `
 
 </table>
 
-More results
+Gallery:
 
 <table class="center">
+
+<tr>
+  <td><img src="assets/two_teddy_bears_playing_poker_under_water,_highly_detailed,_oil_painting_style.gif"></td>
+  <td><img src="assets/a_teddy_bear_skating_under_water,_highly_detailed.gif"></td>
+  <td><img src="assets/a_cat_reading_a_book_on_the_table,__Van_Gogh_style.gif"></td>      
+</tr>
+
+<tr>
+  <td>two teddy bears playing poker under water, highly detailed, oil painting style</td>
+  <td>a teddy bear skating under water, highly detailed</td>
+  <td>a cat reading a book on the table, Van Gogh style</td>      
+</tr>
+        
 <tr>
   <td><img src="assets/a_cute_raccoon_playing_guitar_in_the_park_at_sunrise,_oil_painting_style.gif"></td>
   <td><img src="assets/a_teddy_bear_walking_in_the_park_at_sunrise_oil_painting_style.gif"></td>
