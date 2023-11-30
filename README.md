@@ -139,8 +139,8 @@ Gallery:
 
 <tr>
   <td>Elon Musk in a space suit standing besides a rocket, high quality</td>
-  <td>a teddy bear in a suit having dinner</td>
-  <td>Iron Man flying in the sky</td>      
+  <td>a teddy bear in a suit having dinner in a well-decorated house</td>
+  <td>Iron Man flying in the sky, 4k, high quality</td>      
 </tr>
 
 </table>
