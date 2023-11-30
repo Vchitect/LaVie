@@ -131,6 +131,18 @@ Gallery:
   <td>a teddy bear reading a book near a small river, oil painting style</td>      
 </tr>
 
+<tr>
+  <td><img src="assets/Elon_Musk_in_spacesuit_standing_besides_a_rocket,_high_quality05.gif"></td>
+  <td><img src="assets/a_teddy_bear_in_a__suit_having_dinner.gif"></td>
+  <td><img src="assets/Iron_Man_flying_in_the_sky.gif"></td>      
+</tr>
+
+<tr>
+  <td>Elon Musk in a space suit standing besides a rocket, high quality</td>
+  <td>a teddy bear in a suit having dinner</td>
+  <td>Iron Man flying in the sky</td>      
+</tr>
+
 </table>
 
 Feel free to try different prompts, and share with us which one you like it most!
