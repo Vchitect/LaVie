@@ -76,7 +76,7 @@ Gallery:
 
 </table>
 
-Feel free to try different prompts, and share with us which one you like it most!
+Feel free to try different prompts, and share with us which one you like the most!
 
 
 ## Inference
