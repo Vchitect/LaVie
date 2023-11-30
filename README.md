@@ -34,6 +34,50 @@ Download pre-trained [LaVie models](https://huggingface.co/YaohuiW/LaVie/tree/ma
 └── └── stable-diffusion-x4-upscaler
         ├── ...
 ```
+Gallery:
+
+<table class="center">
+
+<tr>
+  <td><img src="assets/two_teddy_bears_playing_poker_under_water,_highly_detailed,_oil_painting_style.gif"></td>
+  <td><img src="assets/a_teddy_bear_skating_under_water,_highly_detailed.gif"></td>
+  <td><img src="assets/a_cat_reading_a_book_on_the_table,__Van_Gogh_style.gif"></td>      
+</tr>
+
+<tr>
+  <td>two teddy bears playing poker under water, highly detailed, oil painting style</td>
+  <td>a teddy bear skating under water, highly detailed</td>
+  <td>a cat reading a book on the table, Van Gogh style</td>      
+</tr>
+        
+<tr>
+  <td><img src="assets/a_cute_raccoon_playing_guitar_in_the_park_at_sunrise,_oil_painting_style.gif"></td>
+  <td><img src="assets/a_teddy_bear_walking_in_the_park_at_sunrise_oil_painting_style.gif"></td>
+  <td><img src="assets/laviea_teddy_bear_reading_a_book_near_a_small_river,_oil_painting_style-.gif"></td>      
+</tr>
+
+<tr>
+  <td>a cute raccoon playing guitar in the park at sunrise, oil painting style</td>
+  <td>a teddy bear walking in the park at sunrise, oil painting style</td>
+  <td>a teddy bear reading a book near a small river, oil painting style</td>      
+</tr>
+
+<tr>
+  <td><img src="assets/Elon_Musk_in_spacesuit_standing_besides_a_rocket,_high_quality05.gif"></td>
+  <td><img src="assets/a_teddy_bear_in_a__suit_having_dinner.gif"></td>
+  <td><img src="assets/Iron_Man_flying_in_the_sky.gif"></td>      
+</tr>
+
+<tr>
+  <td>Elon Musk in a space suit standing besides a rocket, high quality</td>
+  <td>a teddy bear in a suit having dinner in a well-decorated house</td>
+  <td>Iron Man flying in the sky, 4k, high quality</td>      
+</tr>
+
+</table>
+
+Feel free to try different prompts, and share with us which one you like it most!
+
 
 ## Inference
 The inference contains **Base T2V**, **Video Interpolation** and **Video Super-Resolution** three steps. We provide several options to generate videos:
@@ -102,50 +146,6 @@ seed: `400`, sample_method: `ddpm`, guidance_scale: `7.0`, num_sampling_steps: `
 </tr>
 
 </table>
-
-Gallery:
-
-<table class="center">
-
-<tr>
-  <td><img src="assets/two_teddy_bears_playing_poker_under_water,_highly_detailed,_oil_painting_style.gif"></td>
-  <td><img src="assets/a_teddy_bear_skating_under_water,_highly_detailed.gif"></td>
-  <td><img src="assets/a_cat_reading_a_book_on_the_table,__Van_Gogh_style.gif"></td>      
-</tr>
-
-<tr>
-  <td>two teddy bears playing poker under water, highly detailed, oil painting style</td>
-  <td>a teddy bear skating under water, highly detailed</td>
-  <td>a cat reading a book on the table, Van Gogh style</td>      
-</tr>
-        
-<tr>
-  <td><img src="assets/a_cute_raccoon_playing_guitar_in_the_park_at_sunrise,_oil_painting_style.gif"></td>
-  <td><img src="assets/a_teddy_bear_walking_in_the_park_at_sunrise_oil_painting_style.gif"></td>
-  <td><img src="assets/laviea_teddy_bear_reading_a_book_near_a_small_river,_oil_painting_style-.gif"></td>      
-</tr>
-
-<tr>
-  <td>a cute raccoon playing guitar in the park at sunrise, oil painting style</td>
-  <td>a teddy bear walking in the park at sunrise, oil painting style</td>
-  <td>a teddy bear reading a book near a small river, oil painting style</td>      
-</tr>
-
-<tr>
-  <td><img src="assets/Elon_Musk_in_spacesuit_standing_besides_a_rocket,_high_quality05.gif"></td>
-  <td><img src="assets/a_teddy_bear_in_a__suit_having_dinner.gif"></td>
-  <td><img src="assets/Iron_Man_flying_in_the_sky.gif"></td>      
-</tr>
-
-<tr>
-  <td>Elon Musk in a space suit standing besides a rocket, high quality</td>
-  <td>a teddy bear in a suit having dinner in a well-decorated house</td>
-  <td>Iron Man flying in the sky, 4k, high quality</td>      
-</tr>
-
-</table>
-
-Feel free to try different prompts, and share with us which one you like it most!
 
 ### Step2 (optional). Video Interpolation
 Run following command to conduct video interpolation.
