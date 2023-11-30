@@ -46,7 +46,7 @@ Gallery:
 
 <tr>
   <td>two teddy bears playing poker under water, highly detailed, oil painting style</td>
-  <td>a teddy bear skating under water, highly detailed</td>
+  <td>a teddy bear skateboarding under water, highly detailed</td>
   <td>a cat reading a book on the table, Van Gogh style</td>      
 </tr>
         
