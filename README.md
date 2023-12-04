@@ -117,9 +117,11 @@ In **configs/sample.yaml**, arguments for inference:
 
 - **text_prompt:** Prompt for generation
 
-Following results can be reproduced with the arguments:
+Following results were generated with the arguments:
 
 seed: `400`, sample_method: `ddpm`, guidance_scale: `7.0`, num_sampling_steps: `50`
+
+(you might obtain different results on different device)
 
 <table class="center">
 <tr>
