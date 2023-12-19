@@ -31,6 +31,7 @@ cd ./pretrained_models
 git clone https://huggingface.co/CompVis/stable-diffusion-v1-4          
 git clone https://huggingface.co/Vchitect/LaVie
 git clone https://huggingface.co/stabilityai/stable-diffusion-x4-upscaler
+cp -r LaVie/* .
 ```
 
 
