@@ -1,6 +1,6 @@
 args:
   input_folder: "../res/base/"
-  ckpt_path: "../pretrained_models/stable-diffusion-v1-4"
+  ckpt_path: "../pretrained_models/lavie_interpolation.pt"
   pretrained_path: "../pretrained_models"
   output_folder: "../res/interpolation/"
   seed_list:
