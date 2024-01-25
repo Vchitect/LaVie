@@ -189,8 +189,8 @@ def main(args):
 		device = "cuda" if torch.cuda.is_available() else "cpu"
 		# device = "cpu"
 		
-		ckpt_path = args.pretrained_path + "/lavie_interpolation.pt"
-		sd_path = args.ckpt_path
+		ckpt_path = args.ckpt_path
+		sd_path = args.pretrained_path + "/stable-diffusion-v1-4"
 		for ckpt in [ckpt_path]:
 
 			ckpt_num = str(ckpt_path).zfill(7)
