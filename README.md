@@ -160,21 +160,6 @@ python sample.py --config configs/sample.yaml
 ```
 The default input video path is `./res/base`, results will be saved under `./res/interpolation`. In `configs/sample.yaml`, you could modify default `input_folder` with `YOUR_INPUT_FOLDER` in `configs/sample.yaml`. Input videos should be named as `prompt1.mp4`, `prompt2.mp4`, ... and put under `YOUR_INPUT_FOLDER`. Launching the code will process all the input videos in `input_folder`.
 
-<table class="center">
-<tr>
-  <td><img src="assets/interpolation/a_teddy_bear_walking_on_the_street,_2k,_high_quality.gif"></td>
-  <td><img src="assets/interpolation/a_Corgi_walking_in_the_park_at_sunrise,_oil_painting_style.gif"></td>
-  <td><img src="assets/interpolation/a_panda_taking_a_selfie,_2k,_high_quality.gif"></td>   
-</tr>
-        
-<tr>
-  <td>a teddy bear walking on the street, 2k, high_quality</td>
-  <td>a Corgi walking in the park at sunrise, oil painting style</td>
-  <td>a panda taking a selfie, 2k, high quality</td>   
-</tr>
-
-</table>
-
 ### Step3 (optional). Video Super-Resolution
 Run following command to conduct video super-resolution.
 ```
