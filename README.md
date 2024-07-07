@@ -19,7 +19,7 @@ This repository is the official PyTorch implementation of [LaVie](https://arxiv.
 
 ## News
 __[2024.07.08]__: **LaVie-2** will be released soon, stay tuned!
-<video preload="auto" src="https://github.com/Vchitect/LaVie/assets/7929326/196ee3ca-f106-433a-8edc-7803f2f11aa4" width="800"></video>
+<video poster="https://github.com/Vchitect/LaVie/assets/7929326/f54662e9-7641-4173-99ca-db7592d086c3" preload="auto" src="https://github.com/Vchitect/LaVie/assets/7929326/196ee3ca-f106-433a-8edc-7803f2f11aa4" width="800"></video>
 
 <!--
 <img src="lavie.gif" width="800">
