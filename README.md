@@ -17,12 +17,13 @@ This repository is the official PyTorch implementation of [LaVie](https://arxiv.
 [![Open in OpenXLab](https://cdn-static.openxlab.org.cn/app-center/openxlab_app.svg)]()
 -->
 
-<video width="640" height="360" controls>
-  <source src="assets/teaser-lavie2.mp4" type="video/mp4">
-  
-</video>
+## News
+__[2024.07.08]__: **LaVie-2** will be released soon, stay tuned!
+<video src="https://github.com/Vchitect/LaVie/assets/7929326/196ee3ca-f106-433a-8edc-7803f2f11aa4" width="800"></video>
 
+<!--
 <img src="lavie.gif" width="800">
+-->
 
 ## Installation
 ```
