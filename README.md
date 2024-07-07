@@ -18,8 +18,8 @@ This repository is the official PyTorch implementation of [LaVie](https://arxiv.
 -->
 
 <video width="640" height="360" controls>
-  <source src="视频链接" type="video/mp4">
-  assets/teaser-lavie2.mp4
+  <source src="assets/teaser-lavie2.mp4" type="video/mp4">
+  
 </video>
 
 <img src="lavie.gif" width="800">
