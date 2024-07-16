@@ -37,7 +37,8 @@ except:
     from diffusers.utils.torch_utils import randn_tensor
 
 
-from diffusers.pipeline_utils import DiffusionPipeline
+# from diffusers.pipeline_utils import DiffusionPipeline
+from diffusers.pipelines.pipeline_utils import DiffusionPipeline
 from dataclasses import dataclass
 
 import os, sys
@@ -409,7 +410,28 @@ class VideoGenPipeline(DiffusionPipeline):
         latents = einops.rearrange(latents, "b c f h w -> (b f) c h w")
         video = self.vae.decode(latents).sample
         video = einops.rearrange(video, "(b f) c h w -> b f h w c", f=video_length)
-        video = ((video / 2 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().contiguous()
+        video = ((video / 2.0 + 0.5) * 255).add_(0.5).clamp_(0, 255).to(dtype=torch.uint8).cpu().contiguous()
+        return video
+    
+    def decode_latents_with_temporal_decoder(self, latents):
+        video_length = latents.shape[2]
+        latents = 1 / self.vae.config.scaling_factor * latents
+        latents = einops.rearrange(latents, "b c f h w -> (b f) c h w")
+        video = []
+
+        decode_chunk_size = 14
+        for frame_idx in range(0, latents.shape[0], decode_chunk_size):
+            num_frames_in = latents[frame_idx : frame_idx + decode_chunk_size].shape[0]
+
+            decode_kwargs = {}
+            decode_kwargs["num_frames"] = num_frames_in
+
+            video.append(self.vae.decode(latents[frame_idx:frame_idx+decode_chunk_size], **decode_kwargs).sample)
+            
+        video = torch.cat(video)
+        video = einops.rearrange(video, "(b f) c h w -> b f h w c", f=video_length)
+        video = ((video / 2.0 + 0.5).clamp(0, 1) * 255).to(dtype=torch.uint8).cpu().contiguous()
+        # we always cast to float32 as this does not cause significant overhead and is compatible with bfloa16
         return video
 
     def prepare_extra_step_kwargs(self, generator, eta):
@@ -515,6 +537,7 @@ class VideoGenPipeline(DiffusionPipeline):
         callback: Optional[Callable[[int, int, torch.FloatTensor], None]] = None,
         callback_steps: int = 1,
         cross_attention_kwargs: Optional[Dict[str, Any]] = None,
+        enable_vae_temporal_decoder: bool = False,
     ):
         r"""
         Function invoked when calling the pipeline for generation.
@@ -672,6 +695,9 @@ class VideoGenPipeline(DiffusionPipeline):
 
         
             # 8. Post-processing
-            video = self.decode_latents(latents)
+            if enable_vae_temporal_decoder:
+                video = self.decode_latents_with_temporal_decoder(latents)
+            else:
+                video = self.decode_latents(latents)
 
         return StableDiffusionPipelineOutput(video=video)
