@@ -174,22 +174,22 @@ python sample.py --config configs/sample.yaml
 ```
 The default input video path is `./res/base` and results will be saved under `./res/vsr`. You could modify default `input_path` with `YOUR_INPUT_FOLDER` in `configs/sample.yaml`. Similar to Step2, input videos should be named as `prompt1.mp4`, `prompt2.mp4`, ... and put under `YOUR_INPUT_FOLDER`. Launching the code will process all the input videos in `input_folder`.
 
-## BibTex
+## BibTeX
 ```bibtex
 @article{wang2023lavie,
   title={LAVIE: High-Quality Video Generation with Cascaded Latent Diffusion Models},
   author={Wang, Yaohui and Chen, Xinyuan and Ma, Xin and Zhou, Shangchen and Huang, Ziqi and Wang, Yi and Yang, Ceyuan and He, Yinan and Yu, Jiashuo and Yang, Peiqing and others},
-  journal={arXiv preprint arXiv:2309.15103},
-  year={2023}
+  journal={IJCV},
+  year={2024}
 }
 ```
 
 ```bibtex
-@article{chen2023seine,
-title={SEINE: Short-to-Long Video Diffusion Model for Generative Transition and Prediction},
-author={Chen, Xinyuan and Wang, Yaohui and Zhang, Lingjun and Zhuang, Shaobin and Ma, Xin and Yu, Jiashuo and Wang, Yali and Lin, Dahua and Qiao, Yu and Liu, Ziwei},
-journal={arXiv preprint arXiv:2310.20700},
-year={2023}
+@inproceedings{chen2023seine,
+  title={Seine: Short-to-long video diffusion model for generative transition and prediction},
+  author={Chen, Xinyuan and Wang, Yaohui and Zhang, Lingjun and Zhuang, Shaobin and Ma, Xin and Yu, Jiashuo and Wang, Yali and Lin, Dahua and Qiao, Yu and Liu, Ziwei},
+  booktitle={ICLR},
+  year={2023}
 }
 ```
 
