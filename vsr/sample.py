@@ -31,6 +31,8 @@ def main(args):
 	pipeline.vae = AutoencoderKL.from_config("configs/vae_config.json")
 	pretrained_model = args.pretrained_path + "/stable-diffusion-x4-upscaler/vae/diffusion_pytorch_model.bin"
 	pipeline.vae.load_state_dict(torch.load(pretrained_model, map_location="cpu"))
+	pipeline.vae = pipeline.vae.half()
+	pipeline.vae.eval()
 
 	# unet
 	config_path = "./configs/unet_3d_config.json"
@@ -45,6 +47,7 @@ def main(args):
 	pipeline.unet.load_state_dict(checkpoint, True) 
 	pipeline.unet = pipeline.unet.half()
 	pipeline.unet.eval() # important!
+	pipeline.enable_xformers_memory_efficient_attention()
 
 	# DDIMScheduler
 	with open(args.pretrained_path + '/stable-diffusion-x4-upscaler/scheduler/scheduler_config.json', "r") as f:
@@ -52,7 +55,7 @@ def main(args):
 	config["beta_schedule"] = "linear"
 	pipeline.scheduler = DDIMScheduler.from_config(config)
 
-	pipeline = pipeline.to("cuda")
+	pipeline = pipeline.to(device)
 
 	# ---------------------- load user's prompt ----------------------
 	# input
