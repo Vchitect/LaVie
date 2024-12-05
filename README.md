@@ -32,7 +32,18 @@ conda activate lavie
 ```
 
 ## Download Pre-Trained models
-Download pre-trained [LaVie models](https://huggingface.co/YaohuiW/LaVie/tree/main), [Stable Diffusion 1.4](https://huggingface.co/CompVis/stable-diffusion-v1-4/tree/main), [stable-diffusion-x4-upscaler](https://huggingface.co/stabilityai/stable-diffusion-x4-upscaler/tree/main) to `./pretrained_models`. You should be able to see the following:
+Download pre-trained [LaVie models](https://huggingface.co/YaohuiW/LaVie/tree/main), [Stable Diffusion 1.4](https://huggingface.co/CompVis/stable-diffusion-v1-4/tree/main), [stable-diffusion-x4-upscaler](https://huggingface.co/stabilityai/stable-diffusion-x4-upscaler/tree/main) to `./pretrained_models` by the following command:
+
+```
+cd ./pretrained_models
+git clone https://huggingface.co/CompVis/stable-diffusion-v1-4          
+git clone https://huggingface.co/Vchitect/LaVie
+git clone https://huggingface.co/stabilityai/stable-diffusion-x4-upscaler
+cp -r LaVie/* .
+```
+
+
+After the download, you should be able to see the following:
 ```
 ├── pretrained_models
 │   ├── lavie_base.pt
