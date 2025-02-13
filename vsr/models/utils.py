@@ -22,6 +22,7 @@ from einops import repeat
 #                                  Unet Utils                                   #
 #################################################################################
 
+
 def checkpoint(func, inputs, params, flag):
     """
     Evaluate a function without caching intermediate activations, allowing for
@@ -83,14 +84,18 @@ def timestep_embedding(timesteps, dim, max_period=10000, repeat_only=False):
     if not repeat_only:
         half = dim // 2
         freqs = torch.exp(
-            -math.log(max_period) * torch.arange(start=0, end=half, dtype=torch.float32) / half
+            -math.log(max_period)
+            * torch.arange(start=0, end=half, dtype=torch.float32)
+            / half
         ).to(device=timesteps.device)
         args = timesteps[:, None].float() * freqs[None]
         embedding = torch.cat([torch.cos(args), torch.sin(args)], dim=-1)
         if dim % 2:
-            embedding = torch.cat([embedding, torch.zeros_like(embedding[:, :1])], dim=-1)
+            embedding = torch.cat(
+                [embedding, torch.zeros_like(embedding[:, :1])], dim=-1
+            )
     else:
-        embedding = repeat(timesteps, 'b -> b d', d=dim).contiguous()
+        embedding = repeat(timesteps, "b -> b d", d=dim).contiguous()
     return embedding
 
 
@@ -137,6 +142,7 @@ class SiLU(nn.Module):
 class GroupNorm32(nn.GroupNorm):
     def forward(self, x):
         return super().forward(x.float()).type(x.dtype)
+
 
 def conv_nd(dims, *args, **kwargs):
     """
@@ -185,9 +191,12 @@ def avg_pool_nd(dims, *args, **kwargs):
 
 
 def noise_like(shape, device, repeat=False):
-    repeat_noise = lambda: torch.randn((1, *shape[1:]), device=device).repeat(shape[0], *((1,) * (len(shape) - 1)))
+    repeat_noise = lambda: torch.randn((1, *shape[1:]), device=device).repeat(
+        shape[0], *((1,) * (len(shape) - 1))
+    )
     noise = lambda: torch.randn(shape, device=device)
     return repeat_noise() if repeat else noise()
+
 
 def count_flops_attn(model, _x, y):
     """
@@ -205,8 +214,9 @@ def count_flops_attn(model, _x, y):
     # We perform two matmuls with the same number of ops.
     # The first computes the weight matrix, the second computes
     # the combination of the value vectors.
-    matmul_ops = 2 * b * (num_spatial ** 2) * c
+    matmul_ops = 2 * b * (num_spatial**2) * c
     model.total_ops += torch.DoubleTensor([matmul_ops])
+
 
 def count_params(model, verbose=False):
     total_params = sum(p.numel() for p in model.parameters())

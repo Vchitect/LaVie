@@ -3,6 +3,7 @@ import random
 import numbers
 from torchvision.transforms import RandomCrop, RandomResizedCrop
 
+
 def _is_tensor_video_clip(clip):
     if not torch.is_tensor(clip):
         raise TypeError("clip should be Tensor. Got %s" % type(clip))
@@ -11,7 +12,7 @@ def _is_tensor_video_clip(clip):
         raise ValueError("clip should be 4D. Got %dD" % clip.dim())
 
     return True
-	
+
 
 def to_tensor(clip):
     """
@@ -24,15 +25,21 @@ def to_tensor(clip):
     """
     _is_tensor_video_clip(clip)
     if not clip.dtype == torch.uint8:
-        raise TypeError("clip tensor should have data type uint8. Got %s" % str(clip.dtype))
+        raise TypeError(
+            "clip tensor should have data type uint8. Got %s" % str(clip.dtype)
+        )
     # return clip.float().permute(3, 0, 1, 2) / 255.0
     return clip.float() / 255.0
 
 
 def resize(clip, target_size, interpolation_mode):
     if len(target_size) != 2:
-        raise ValueError(f"target size should be tuple (height, width), instead got {target_size}")
-    return torch.nn.functional.interpolate(clip, size=target_size, mode=interpolation_mode, align_corners=False)
+        raise ValueError(
+            f"target size should be tuple (height, width), instead got {target_size}"
+        )
+    return torch.nn.functional.interpolate(
+        clip, size=target_size, mode=interpolation_mode, align_corners=False
+    )
 
 
 class ToTensorVideo:
@@ -56,11 +63,12 @@ class ToTensorVideo:
     def __repr__(self) -> str:
         return self.__class__.__name__
 
-	
+
 class ResizeVideo:
-    '''
+    """
     Resize to the specified size
-    '''
+    """
+
     def __init__(
         self,
         size,
@@ -68,13 +76,14 @@ class ResizeVideo:
     ):
         if isinstance(size, tuple):
             if len(size) != 2:
-                raise ValueError(f"size should be tuple (height, width), instead got {size}")
+                raise ValueError(
+                    f"size should be tuple (height, width), instead got {size}"
+                )
             self.size = size
         else:
             self.size = (size, size)
 
         self.interpolation_mode = interpolation_mode
-
 
     def __call__(self, clip):
         """
@@ -84,12 +93,14 @@ class ResizeVideo:
             torch.tensor: scale resized video clip.
                 size is (T, C, h, w)
         """
-        clip_resize = resize(clip, target_size=self.size, interpolation_mode=self.interpolation_mode)
+        clip_resize = resize(
+            clip, target_size=self.size, interpolation_mode=self.interpolation_mode
+        )
         return clip_resize
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(size={self.size}, interpolation_mode={self.interpolation_mode}"
-		
+
 
 class TemporalRandomCrop(object):
     """Temporally crop the given frame indices at a random location.
@@ -106,4 +117,3 @@ class TemporalRandomCrop(object):
         begin_index = random.randint(0, rand_end)
         end_index = min(begin_index + self.size, total_frames)
         return begin_index, end_index
-

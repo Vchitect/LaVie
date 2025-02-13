@@ -5,6 +5,7 @@ from typing import List, Optional, Tuple, Union
 
 import os
 import sys
+
 sys.path.append(os.path.split(sys.path[0])[0])
 
 import json
@@ -44,15 +45,17 @@ except:
     )
     from resnet import InflatedConv3d
     from temporal_module import TemporalModule3D, EmptyTemporalModule3D
-    
+
 from rotary_embedding_torch import RotaryEmbedding
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
+
 
 def zero_module(module):
     for p in module.parameters():
         nn.init.zeros_(p)
     return module
+
 
 class RelativePositionBias(nn.Module):
     def __init__(
@@ -78,21 +81,35 @@ class RelativePositionBias(nn.Module):
         max_exact = num_buckets // 2
         is_small = n < max_exact
 
-        val_if_large = max_exact + (
-            torch.log(n.float() / max_exact) / math.log(max_distance / max_exact) * (num_buckets - max_exact)
-        ).long()
-        val_if_large = torch.min(val_if_large, torch.full_like(val_if_large, num_buckets - 1))
+        val_if_large = (
+            max_exact
+            + (
+                torch.log(n.float() / max_exact)
+                / math.log(max_distance / max_exact)
+                * (num_buckets - max_exact)
+            ).long()
+        )
+        val_if_large = torch.min(
+            val_if_large, torch.full_like(val_if_large, num_buckets - 1)
+        )
 
         ret += torch.where(is_small, n, val_if_large)
         return ret
 
     def forward(self, n, device):
-        q_pos = torch.arange(n, dtype = torch.long, device = device)
-        k_pos = torch.arange(n, dtype = torch.long, device = device)
-        rel_pos = einops.rearrange(k_pos, 'j -> 1 j') - einops.rearrange(q_pos, 'i -> i 1')
-        rp_bucket = self._relative_position_bucket(rel_pos, num_buckets = self.num_buckets, max_distance = self.max_distance)
+        q_pos = torch.arange(n, dtype=torch.long, device=device)
+        k_pos = torch.arange(n, dtype=torch.long, device=device)
+        rel_pos = einops.rearrange(k_pos, "j -> 1 j") - einops.rearrange(
+            q_pos, "i -> i 1"
+        )
+        rp_bucket = self._relative_position_bucket(
+            rel_pos, num_buckets=self.num_buckets, max_distance=self.max_distance
+        )
         values = self.relative_attention_bias(rp_bucket)
-        return einops.rearrange(values, 'i j h -> h i j') # num_heads, num_frames, num_frames
+        return einops.rearrange(
+            values, "i j h -> h i j"
+        )  # num_heads, num_frames, num_frames
+
 
 @dataclass
 class UNet3DConditionOutput(BaseOutput):
@@ -106,45 +123,34 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
     def __init__(
         self,
         ### Temporal Module Additional Kwargs ###
-        down_temporal_idx = (0,1,2),
-        mid_temporal = False,
-        up_temporal_idx = (0,1,2),
-        video_condition = True,
-        temporal_module_config = None,
-        
-        sample_size: Optional[int] = None, # 80
+        down_temporal_idx=(0, 1, 2),
+        mid_temporal=False,
+        up_temporal_idx=(0, 1, 2),
+        video_condition=True,
+        temporal_module_config=None,
+        sample_size: Optional[int] = None,  # 80
         in_channels: int = 7,
         out_channels: int = 4,
         center_input_sample: bool = False,
-        max_noise_level: int = 350, 
+        max_noise_level: int = 350,
         flip_sin_to_cos: bool = True,
         freq_shift: int = 0,
         attention_head_dim: Union[int, Tuple[int]] = 8,
-        block_out_channels: Tuple[int] = (
-            256, 
-            512, 
-            512, 
-            1024
-        ),
+        block_out_channels: Tuple[int] = (256, 512, 512, 1024),
         down_block_types: Tuple[str] = (
             "DownBlock3D",
             "CrossAttnDownBlock3D",
             "CrossAttnDownBlock3D",
-            "CrossAttnDownBlock3D"
+            "CrossAttnDownBlock3D",
         ),
         mid_block_type: str = "UNetMidBlock3DCrossAttn",
         up_block_types: Tuple[str] = (
             "CrossAttnUpBlock3D",
             "CrossAttnUpBlock3D",
             "CrossAttnUpBlock3D",
-            "UpBlock3D"
+            "UpBlock3D",
         ),
-        only_cross_attention: Union[bool, Tuple[bool]] = (
-            True,
-            True,
-            True,
-            False
-        ),
+        only_cross_attention: Union[bool, Tuple[bool]] = (True, True, True, False),
         layers_per_block: int = 2,
         downsample_padding: int = 1,
         mid_block_scale_factor: float = 1,
@@ -167,8 +173,10 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
         time_embed_dim = block_out_channels[0] * 4
 
         # input
-        self.conv_in = InflatedConv3d(in_channels, block_out_channels[0], kernel_size=3, padding=1)
-        
+        self.conv_in = InflatedConv3d(
+            in_channels, block_out_channels[0], kernel_size=3, padding=1
+        )
+
         # time
         self.time_proj = Timesteps(block_out_channels[0], flip_sin_to_cos, freq_shift)
         timestep_input_dim = block_out_channels[0]
@@ -177,7 +185,9 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
 
         # class embedding
         if class_embed_type is None and num_class_embeds is not None:
-            self.class_embedding = nn.Embedding(num_class_embeds, time_embed_dim) # VSR for noise level
+            self.class_embedding = nn.Embedding(
+                num_class_embeds, time_embed_dim
+            )  # VSR for noise level
         elif class_embed_type == "timestep":
             self.class_embedding = TimestepEmbedding(timestep_input_dim, time_embed_dim)
         elif class_embed_type == "identity":
@@ -198,10 +208,8 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
         if isinstance(only_cross_attention, bool):
             only_cross_attention = [only_cross_attention] * len(down_block_types)
 
-
         if isinstance(attention_head_dim, int):
             attention_head_dim = (attention_head_dim,) * len(down_block_types)
-
 
         self.temporal_rotary_emb = RotaryEmbedding(32)
 
@@ -237,13 +245,17 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
             self.down_blocks.append(down_block)
 
             # Down Sample Temporal Modules
-            down_temporal_block = TemporalModule3D(
-                in_channels=output_channel,
-                out_channels=output_channel,
-                temb_channels=time_embed_dim,
-                video_condition=video_condition,
-                **temporal_module_config,
-            ) if i in down_temporal_idx else EmptyTemporalModule3D()
+            down_temporal_block = (
+                TemporalModule3D(
+                    in_channels=output_channel,
+                    out_channels=output_channel,
+                    temb_channels=time_embed_dim,
+                    video_condition=video_condition,
+                    **temporal_module_config,
+                )
+                if i in down_temporal_idx
+                else EmptyTemporalModule3D()
+            )
             self.down_temporal_blocks.append(down_temporal_block)
         # mid
         if mid_block_type == "UNetMidBlock3DCrossAttn":
@@ -267,13 +279,17 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
         else:
             raise ValueError(f"unknown mid_block_type : {mid_block_type}")
 
-        self.mid_temporal_block = TemporalModule3D(
-            in_channels=block_out_channels[-1],
-            out_channels=block_out_channels[-1],
-            temb_channels=time_embed_dim,
-            video_condition=video_condition,
-            **temporal_module_config,
-        ) if mid_temporal else EmptyTemporalModule3D()
+        self.mid_temporal_block = (
+            TemporalModule3D(
+                in_channels=block_out_channels[-1],
+                out_channels=block_out_channels[-1],
+                temb_channels=time_embed_dim,
+                video_condition=video_condition,
+                **temporal_module_config,
+            )
+            if mid_temporal
+            else EmptyTemporalModule3D()
+        )
 
         # count how many layers upsample the videos
         self.num_upsamplers = 0
@@ -288,7 +304,9 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
 
             prev_output_channel = output_channel
             output_channel = reversed_block_out_channels[i]
-            input_channel = reversed_block_out_channels[min(i + 1, len(block_out_channels) - 1)]
+            input_channel = reversed_block_out_channels[
+                min(i + 1, len(block_out_channels) - 1)
+            ]
 
             # add upsample block for all BUT final layer
             if not is_final_block:
@@ -322,19 +340,27 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
             self.up_blocks.append(up_block)
             prev_output_channel = output_channel
 
-            up_temporal_block = TemporalModule3D(
-                in_channels=output_channel,
-                out_channels=output_channel,
-                temb_channels=time_embed_dim,
-                video_condition=video_condition,
-                **temporal_module_config,
-            ) if i in up_temporal_idx else EmptyTemporalModule3D()
+            up_temporal_block = (
+                TemporalModule3D(
+                    in_channels=output_channel,
+                    out_channels=output_channel,
+                    temb_channels=time_embed_dim,
+                    video_condition=video_condition,
+                    **temporal_module_config,
+                )
+                if i in up_temporal_idx
+                else EmptyTemporalModule3D()
+            )
             self.up_temporal_blocks.append(up_temporal_block)
 
         # out
-        self.conv_norm_out = nn.GroupNorm(num_channels=block_out_channels[0], num_groups=norm_num_groups, eps=norm_eps)
+        self.conv_norm_out = nn.GroupNorm(
+            num_channels=block_out_channels[0], num_groups=norm_num_groups, eps=norm_eps
+        )
         self.conv_act = nn.SiLU()
-        self.conv_out = InflatedConv3d(block_out_channels[0], out_channels, kernel_size=3, padding=1)
+        self.conv_out = InflatedConv3d(
+            block_out_channels[0], out_channels, kernel_size=3, padding=1
+        )
 
     def set_attention_slice(self, slice_size):
         r"""
@@ -373,7 +399,11 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
             # make smallest slice possible
             slice_size = num_slicable_layers * [1]
 
-        slice_size = num_slicable_layers * [slice_size] if not isinstance(slice_size, list) else slice_size
+        slice_size = (
+            num_slicable_layers * [slice_size]
+            if not isinstance(slice_size, list)
+            else slice_size
+        )
 
         if len(slice_size) != len(sliceable_head_dims):
             raise ValueError(
@@ -390,7 +420,9 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
         # Recursively walk through all the children.
         # Any children which exposes the set_attention_slice method
         # gets the message
-        def fn_recursive_set_attention_slice(module: torch.nn.Module, slice_size: List[int]):
+        def fn_recursive_set_attention_slice(
+            module: torch.nn.Module, slice_size: List[int]
+        ):
             if hasattr(module, "set_attention_slice"):
                 module.set_attention_slice(slice_size.pop())
 
@@ -402,7 +434,9 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
             fn_recursive_set_attention_slice(module, reversed_slice_size)
 
     def _set_gradient_checkpointing(self, module, value=False):
-        if isinstance(module, (CrossAttnDownBlock3D, DownBlock3D, CrossAttnUpBlock3D, UpBlock3D)):
+        if isinstance(
+            module, (CrossAttnDownBlock3D, DownBlock3D, CrossAttnUpBlock3D, UpBlock3D)
+        ):
             module.gradient_checkpointing = value
 
     def forward(
@@ -411,12 +445,12 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
         timestep: Union[torch.Tensor, float, int],
         low_res: torch.FloatTensor,
         # encoder_hidden_states: torch.Tensor,
-        encoder_hidden_states = None,
+        encoder_hidden_states=None,
         class_labels: Optional[torch.Tensor] = 20,
         low_res_clean: Optional[torch.FloatTensor] = None,
         attention_mask: Optional[torch.Tensor] = None,
         return_dict: bool = True,
-    ): # -> Union[UNet3DConditionOutput, Tuple]:
+    ):  # -> Union[UNet3DConditionOutput, Tuple]:
         r"""
         Args:
             sample (`torch.FloatTensor`): (batch, channel, seq_length, height, width) noisy inputs tensor
@@ -440,19 +474,19 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
         # upsample size should be forwarded when sample is not a multiple of `default_overall_up_factor`
         forward_upsample_size = False
         upsample_size = None
-        
+
         if self.video_condition:
             low_res_dict = {}
             low_res_dict[low_res.shape[-1]] = low_res
-            for s in [1/2., 1/4., 1/8.]:
-                low_res_ds = F.interpolate(low_res, scale_factor=(1, s, s), mode='area')
+            for s in [1 / 2.0, 1 / 4.0, 1 / 8.0]:
+                low_res_ds = F.interpolate(low_res, scale_factor=(1, s, s), mode="area")
                 low_res_dict[low_res_ds.shape[-1]] = low_res_ds
         else:
             low_res_dict = None
-            
-        sample = torch.cat([sample, low_res], dim=1) # concat on C: 4+3=7
-        
-        #print(f'==============={sample.shape}================')
+
+        sample = torch.cat([sample, low_res], dim=1)  # concat on C: 4+3=7
+
+        # print(f'==============={sample.shape}================')
         if any(s % default_overall_up_factor != 0 for s in sample.shape[-2:]):
             logger.info("Forward upsample size to force interpolation output size.")
             forward_upsample_size = True
@@ -492,10 +526,14 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
 
         if self.class_embedding is not None:
             if class_labels is None:
-                raise ValueError("class_labels should be provided when num_class_embeds > 0")
+                raise ValueError(
+                    "class_labels should be provided when num_class_embeds > 0"
+                )
             # check noise level
             if torch.any(class_labels > self.config.max_noise_level):
-                raise ValueError(f"`noise_level` has to be <= {self.config.max_noise_level} but is {class_labels}")
+                raise ValueError(
+                    f"`noise_level` has to be <= {self.config.max_noise_level} but is {class_labels}"
+                )
 
             if self.config.class_embed_type == "timestep":
                 class_labels = self.time_proj(class_labels)
@@ -503,14 +541,18 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
             class_emb = self.class_embedding(class_labels).to(dtype=self.dtype)
             emb = emb + class_emb
 
-
         # pre-process
         sample = self.conv_in(sample)
 
         # down
         down_block_res_samples = (sample,)
-        for downsample_block, down_temporal_block in zip(self.down_blocks, self.down_temporal_blocks):
-            if hasattr(downsample_block, "has_cross_attention") and downsample_block.has_cross_attention:
+        for downsample_block, down_temporal_block in zip(
+            self.down_blocks, self.down_temporal_blocks
+        ):
+            if (
+                hasattr(downsample_block, "has_cross_attention")
+                and downsample_block.has_cross_attention
+            ):
                 sample, res_samples = downsample_block(
                     hidden_states=sample,
                     temb=emb,
@@ -532,7 +574,10 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
             )
         # mid
         sample = self.mid_block(
-            sample, emb, encoder_hidden_states=encoder_hidden_states, attention_mask=attention_mask
+            sample,
+            emb,
+            encoder_hidden_states=encoder_hidden_states,
+            attention_mask=attention_mask,
         )
         # 2. temporal modeling at mid block
         sample = self.mid_temporal_block(
@@ -544,18 +589,25 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
         )
 
         # up
-        for i, (upsample_block, up_temporal_block) in enumerate(zip(self.up_blocks, self.up_temporal_blocks)):
+        for i, (upsample_block, up_temporal_block) in enumerate(
+            zip(self.up_blocks, self.up_temporal_blocks)
+        ):
             is_final_block = i == len(self.up_blocks) - 1
 
             res_samples = down_block_res_samples[-len(upsample_block.resnets) :]
-            down_block_res_samples = down_block_res_samples[: -len(upsample_block.resnets)]
+            down_block_res_samples = down_block_res_samples[
+                : -len(upsample_block.resnets)
+            ]
 
             # if we have not reached the final block and need to forward the
             # upsample size, we do it here
             if not is_final_block and forward_upsample_size:
                 upsample_size = down_block_res_samples[-1].shape[2:]
 
-            if hasattr(upsample_block, "has_cross_attention") and upsample_block.has_cross_attention:
+            if (
+                hasattr(upsample_block, "has_cross_attention")
+                and upsample_block.has_cross_attention
+            ):
                 sample = upsample_block(
                     hidden_states=sample,
                     temb=emb,
@@ -566,7 +618,10 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
                 )
             else:
                 sample = upsample_block(
-                    hidden_states=sample, temb=emb, res_hidden_states_tuple=res_samples, upsample_size=upsample_size
+                    hidden_states=sample,
+                    temb=emb,
+                    res_hidden_states_tuple=res_samples,
+                    upsample_size=upsample_size,
                 )
 
             # 3. temporal modeling during up sample
@@ -588,15 +643,17 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
             return (sample,)
 
         return UNet3DConditionOutput(sample=sample)
-    
-    def forward_with_cfg(self, 
-                        x, 
-                        t, 
-                        low_res,
-                        encoder_hidden_states = None,
-                        class_labels: Optional[torch.Tensor] = 20,
-                        cfg_scale=4.0,
-                        use_fp16=False):
+
+    def forward_with_cfg(
+        self,
+        x,
+        t,
+        low_res,
+        encoder_hidden_states=None,
+        class_labels: Optional[torch.Tensor] = 20,
+        cfg_scale=4.0,
+        use_fp16=False,
+    ):
         """
         Forward, but also batches the unconditional forward pass for classifier-free guidance.
         """
@@ -605,7 +662,9 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
         combined = torch.cat([half, half], dim=0)
         if use_fp16:
             combined = combined.to(dtype=torch.float16)
-        model_out = self.forward(combined, t, low_res, encoder_hidden_states, class_labels).sample
+        model_out = self.forward(
+            combined, t, low_res, encoder_hidden_states, class_labels
+        ).sample
         # For exact reproducibility reasons, we apply classifier-free guidance on only
         # three channels by default. The standard approach to cfg applies it to all channels.
         # This can be done by uncommenting the following line and commenting-out the line following that.
@@ -615,7 +674,6 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
         half_eps = uncond_eps + cfg_scale * (cond_eps - uncond_eps)
         eps = torch.cat([half_eps, half_eps], dim=0)
         return torch.cat([eps, rest], dim=1)
-
 
     @classmethod
     def from_pretrained_2d(cls, config_path, pretrained_model_path):
@@ -632,8 +690,8 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
             raise RuntimeError(f"{model_file} does not exist")
         state_dict = torch.load(model_file, map_location="cpu")
         for k, v in model.state_dict().items():
-            if 'temporal' in k:
-                print(f'New layers: {k}')
+            if "temporal" in k:
+                print(f"New layers: {k}")
                 state_dict.update({k: v})
 
         model.load_state_dict(state_dict, strict=True)
@@ -641,11 +699,12 @@ class UNet3DVSRModel(ModelMixin, ConfigMixin):
         if freeze_pretrained_2d_upsampler:
             print("Freeze pretrained 2d upsampler!")
             for k, v in model.named_parameters():
-                if not 'temporal' in k:
+                if not "temporal" in k:
                     v.requires_grad = False
         return model
-    
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     import torch
 
     device = "cuda" if torch.cuda.is_available() else "cpu"

@@ -1,4 +1,3 @@
-
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -29,6 +28,7 @@ try:
     from attention import BasicTransformerBlock
 except:
     from .attention import BasicTransformerBlock
+
 
 @dataclass
 class Transformer3DModelOutput(BaseOutput):
@@ -116,7 +116,12 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
                 " results in future versions. If you have downloaded this checkpoint from the Hugging Face Hub, it"
                 " would be very nice if you could open a Pull request for the `transformer/config.json` file"
             )
-            deprecate("norm_type!=num_embeds_ada_norm", "1.0.0", deprecation_message, standard_warn=False)
+            deprecate(
+                "norm_type!=num_embeds_ada_norm",
+                "1.0.0",
+                deprecation_message,
+                standard_warn=False,
+            )
             norm_type = "ada_norm"
 
         if self.is_input_continuous and self.is_input_vectorized:
@@ -129,7 +134,11 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
                 f"Cannot define both `num_vector_embeds`: {num_vector_embeds} and `patch_size`: {patch_size}. Make"
                 " sure that either `num_vector_embeds` or `num_patches` is None."
             )
-        elif not self.is_input_continuous and not self.is_input_vectorized and not self.is_input_patches:
+        elif (
+            not self.is_input_continuous
+            and not self.is_input_vectorized
+            and not self.is_input_patches
+        ):
             raise ValueError(
                 f"Has to define `in_channels`: {in_channels}, `num_vector_embeds`: {num_vector_embeds}, or patch_size:"
                 f" {patch_size}. Make sure that `in_channels`, `num_vector_embeds` or `num_patches` is not None."
@@ -139,14 +148,25 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
         if self.is_input_continuous:
             self.in_channels = in_channels
 
-            self.norm = torch.nn.GroupNorm(num_groups=norm_num_groups, num_channels=in_channels, eps=1e-6, affine=True)
+            self.norm = torch.nn.GroupNorm(
+                num_groups=norm_num_groups,
+                num_channels=in_channels,
+                eps=1e-6,
+                affine=True,
+            )
             if use_linear_projection:
                 self.proj_in = LoRACompatibleLinear(in_channels, inner_dim)
             else:
-                self.proj_in = LoRACompatibleConv(in_channels, inner_dim, kernel_size=1, stride=1, padding=0)
+                self.proj_in = LoRACompatibleConv(
+                    in_channels, inner_dim, kernel_size=1, stride=1, padding=0
+                )
         elif self.is_input_vectorized:
-            assert sample_size is not None, "Transformer2DModel over discrete input must provide sample_size"
-            assert num_vector_embeds is not None, "Transformer2DModel over discrete input must provide num_embed"
+            assert (
+                sample_size is not None
+            ), "Transformer2DModel over discrete input must provide sample_size"
+            assert (
+                num_vector_embeds is not None
+            ), "Transformer2DModel over discrete input must provide num_embed"
 
             self.height = sample_size
             self.width = sample_size
@@ -154,10 +174,15 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
             self.num_latent_pixels = self.height * self.width
 
             self.latent_image_embedding = ImagePositionalEmbeddings(
-                num_embed=num_vector_embeds, embed_dim=inner_dim, height=self.height, width=self.width
+                num_embed=num_vector_embeds,
+                embed_dim=inner_dim,
+                height=self.height,
+                width=self.width,
             )
         elif self.is_input_patches:
-            assert sample_size is not None, "Transformer2DModel over patched input must provide sample_size"
+            assert (
+                sample_size is not None
+            ), "Transformer2DModel over patched input must provide sample_size"
 
             self.height = sample_size
             self.width = sample_size
@@ -200,14 +225,18 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
             if use_linear_projection:
                 self.proj_out = LoRACompatibleLinear(inner_dim, in_channels)
             else:
-                self.proj_out = LoRACompatibleConv(inner_dim, in_channels, kernel_size=1, stride=1, padding=0)
+                self.proj_out = LoRACompatibleConv(
+                    inner_dim, in_channels, kernel_size=1, stride=1, padding=0
+                )
         elif self.is_input_vectorized:
             self.norm_out = nn.LayerNorm(inner_dim)
             self.out = nn.Linear(inner_dim, self.num_vector_embeds - 1)
         elif self.is_input_patches:
             self.norm_out = nn.LayerNorm(inner_dim, elementwise_affine=False, eps=1e-6)
             self.proj_out_1 = nn.Linear(inner_dim, 2 * inner_dim)
-            self.proj_out_2 = nn.Linear(inner_dim, patch_size * patch_size * self.out_channels)
+            self.proj_out_2 = nn.Linear(
+                inner_dim, patch_size * patch_size * self.out_channels
+            )
 
     def forward(
         self,
@@ -271,26 +300,48 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
 
         # convert encoder_attention_mask to a bias the same way we do for attention_mask
         if encoder_attention_mask is not None and encoder_attention_mask.ndim == 2:
-            encoder_attention_mask = (1 - encoder_attention_mask.to(hidden_states.dtype)) * -10000.0
+            encoder_attention_mask = (
+                1 - encoder_attention_mask.to(hidden_states.dtype)
+            ) * -10000.0
             encoder_attention_mask = encoder_attention_mask.unsqueeze(1)
 
         # 1. Input
-        if self.is_input_continuous: # True
+        if self.is_input_continuous:  # True
 
-            assert hidden_states.dim() == 5, f"Expected hidden_states to have ndim=5, but got ndim={hidden_states.dim()}."
+            assert (
+                hidden_states.dim() == 5
+            ), f"Expected hidden_states to have ndim=5, but got ndim={hidden_states.dim()}."
             if self.training:
                 video_length = hidden_states.shape[2] - use_image_num
-                hidden_states = rearrange(hidden_states, "b c f h w -> (b f) c h w").contiguous()
+                hidden_states = rearrange(
+                    hidden_states, "b c f h w -> (b f) c h w"
+                ).contiguous()
                 encoder_hidden_states_length = encoder_hidden_states.shape[1]
-                encoder_hidden_states_video = encoder_hidden_states[:, :encoder_hidden_states_length - use_image_num, ...]
-                encoder_hidden_states_video = repeat(encoder_hidden_states_video, 'b m n c -> b (m f) n c', f=video_length).contiguous()
-                encoder_hidden_states_image = encoder_hidden_states[:, encoder_hidden_states_length - use_image_num:, ...]
-                encoder_hidden_states = torch.cat([encoder_hidden_states_video, encoder_hidden_states_image], dim=1)
-                encoder_hidden_states = rearrange(encoder_hidden_states, 'b m n c -> (b m) n c').contiguous()
+                encoder_hidden_states_video = encoder_hidden_states[
+                    :, : encoder_hidden_states_length - use_image_num, ...
+                ]
+                encoder_hidden_states_video = repeat(
+                    encoder_hidden_states_video,
+                    "b m n c -> b (m f) n c",
+                    f=video_length,
+                ).contiguous()
+                encoder_hidden_states_image = encoder_hidden_states[
+                    :, encoder_hidden_states_length - use_image_num :, ...
+                ]
+                encoder_hidden_states = torch.cat(
+                    [encoder_hidden_states_video, encoder_hidden_states_image], dim=1
+                )
+                encoder_hidden_states = rearrange(
+                    encoder_hidden_states, "b m n c -> (b m) n c"
+                ).contiguous()
             else:
                 video_length = hidden_states.shape[2]
-                hidden_states = rearrange(hidden_states, "b c f h w -> (b f) c h w").contiguous()
-                encoder_hidden_states = repeat(encoder_hidden_states, 'b n c -> (b f) n c', f=video_length).contiguous()
+                hidden_states = rearrange(
+                    hidden_states, "b c f h w -> (b f) c h w"
+                ).contiguous()
+                encoder_hidden_states = repeat(
+                    encoder_hidden_states, "b n c -> (b f) n c", f=video_length
+                ).contiguous()
 
             batch, _, height, width = hidden_states.shape
             residual = hidden_states
@@ -299,10 +350,14 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
             if not self.use_linear_projection:
                 hidden_states = self.proj_in(hidden_states)
                 inner_dim = hidden_states.shape[1]
-                hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(batch, height * width, inner_dim)
+                hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(
+                    batch, height * width, inner_dim
+                )
             else:
                 inner_dim = hidden_states.shape[1]
-                hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(batch, height * width, inner_dim)
+                hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(
+                    batch, height * width, inner_dim
+                )
                 hidden_states = self.proj_in(hidden_states)
         elif self.is_input_vectorized:
             hidden_states = self.latent_image_embedding(hidden_states)
@@ -326,11 +381,19 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
         # 3. Output
         if self.is_input_continuous:
             if not self.use_linear_projection:
-                hidden_states = hidden_states.reshape(batch, height, width, inner_dim).permute(0, 3, 1, 2).contiguous()
+                hidden_states = (
+                    hidden_states.reshape(batch, height, width, inner_dim)
+                    .permute(0, 3, 1, 2)
+                    .contiguous()
+                )
                 hidden_states = self.proj_out(hidden_states)
             else:
                 hidden_states = self.proj_out(hidden_states)
-                hidden_states = hidden_states.reshape(batch, height, width, inner_dim).permute(0, 3, 1, 2).contiguous()
+                hidden_states = (
+                    hidden_states.reshape(batch, height, width, inner_dim)
+                    .permute(0, 3, 1, 2)
+                    .contiguous()
+                )
 
             output = hidden_states + residual
         elif self.is_input_vectorized:
@@ -347,20 +410,36 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
                 timestep, class_labels, hidden_dtype=hidden_states.dtype
             )
             shift, scale = self.proj_out_1(F.silu(conditioning)).chunk(2, dim=1)
-            hidden_states = self.norm_out(hidden_states) * (1 + scale[:, None]) + shift[:, None]
+            hidden_states = (
+                self.norm_out(hidden_states) * (1 + scale[:, None]) + shift[:, None]
+            )
             hidden_states = self.proj_out_2(hidden_states)
 
             # unpatchify
             height = width = int(hidden_states.shape[1] ** 0.5)
             hidden_states = hidden_states.reshape(
-                shape=(-1, height, width, self.patch_size, self.patch_size, self.out_channels)
+                shape=(
+                    -1,
+                    height,
+                    width,
+                    self.patch_size,
+                    self.patch_size,
+                    self.out_channels,
+                )
             )
             hidden_states = torch.einsum("nhwpqc->nchpwq", hidden_states)
             output = hidden_states.reshape(
-                shape=(-1, self.out_channels, height * self.patch_size, width * self.patch_size)
+                shape=(
+                    -1,
+                    self.out_channels,
+                    height * self.patch_size,
+                    width * self.patch_size,
+                )
             )
 
-        output = rearrange(output, "(b f) c h w -> b c f h w", f=video_length + use_image_num).contiguous()
+        output = rearrange(
+            output, "(b f) c h w -> b c f h w", f=video_length + use_image_num
+        ).contiguous()
         if not return_dict:
             return (output,)
 

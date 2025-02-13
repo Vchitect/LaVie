@@ -10,32 +10,38 @@ from .respace import SpacedDiffusion, space_timesteps
 # !important
 def create_diffusion(
     timestep_respacing="",
-    noise_schedule="linear", # 'linear' for training
+    noise_schedule="linear",  # 'linear' for training
     use_kl=False,
     rescale_learned_sigmas=False,
-    prediction_type='v_prediction',
-    variance_type='fixed_small',
+    prediction_type="v_prediction",
+    variance_type="fixed_small",
     beta_start=0.0001,
     beta_end=0.02,
     # beta_start=0.00085,
     # beta_end=0.012,
-    diffusion_steps=1000
+    diffusion_steps=1000,
 ):
-    betas = gd.get_named_beta_schedule(noise_schedule, diffusion_steps, beta_start=beta_start, beta_end=beta_end)
-    if prediction_type == 'epsilon':
-        model_mean_type = gd.ModelMeanType.EPSILON # EPSILON type for stable-diffusion-2-1 512
-    elif prediction_type == 'xstart':
+    betas = gd.get_named_beta_schedule(
+        noise_schedule, diffusion_steps, beta_start=beta_start, beta_end=beta_end
+    )
+    if prediction_type == "epsilon":
+        model_mean_type = (
+            gd.ModelMeanType.EPSILON
+        )  # EPSILON type for stable-diffusion-2-1 512
+    elif prediction_type == "xstart":
         model_mean_type = gd.ModelMeanType.START_X
-    elif prediction_type == 'v_prediction':
-        model_mean_type = gd.ModelMeanType.PREVIOUS_V # gd.ModelMeanType.PREVIOUS_V for stable-diffusion-2-1 768/x4-upscaler
-        
-    if variance_type == 'fixed_small':
+    elif prediction_type == "v_prediction":
+        model_mean_type = (
+            gd.ModelMeanType.PREVIOUS_V
+        )  # gd.ModelMeanType.PREVIOUS_V for stable-diffusion-2-1 768/x4-upscaler
+
+    if variance_type == "fixed_small":
         model_var_type = gd.ModelVarType.FIXED_SMALL
-    elif variance_type == 'fixed_large':
+    elif variance_type == "fixed_large":
         model_var_type = gd.ModelVarType.FIXED_LARGE
-    elif variance_type == 'learned_range':
-        model_var_type = gd.ModelVarType.LEARNED_RANGE    
-        
+    elif variance_type == "learned_range":
+        model_var_type = gd.ModelVarType.LEARNED_RANGE
+
     if use_kl:
         loss_type = gd.LossType.RESCALED_KL
     elif rescale_learned_sigmas:
@@ -49,6 +55,6 @@ def create_diffusion(
         betas=betas,
         model_mean_type=(model_mean_type),
         model_var_type=(model_var_type),
-        loss_type=loss_type
+        loss_type=loss_type,
         # rescale_timesteps=rescale_timesteps,
     )

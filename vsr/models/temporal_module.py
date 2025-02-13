@@ -6,6 +6,7 @@ import numpy as np
 import torch.nn.functional as F
 from torch import nn
 import torchvision
+
 # from torch_utils.ops import grid_sample_gradfix
 
 from diffusers.configuration_utils import ConfigMixin, register_to_config
@@ -13,15 +14,28 @@ from diffusers.models.modeling_utils import ModelMixin
 from diffusers.utils import BaseOutput
 from diffusers.utils.import_utils import is_xformers_available
 from diffusers.models.attention import FeedForward
+
 # from diffusers.models.attention_processor import Attention
 
 try:
     from .diffusers_attention import CrossAttention
-    from .resnet import Downsample3D, Upsample3D, InflatedConv3d, ResnetBlock3D, ResnetBlock3DCNN
+    from .resnet import (
+        Downsample3D,
+        Upsample3D,
+        InflatedConv3d,
+        ResnetBlock3D,
+        ResnetBlock3DCNN,
+    )
 
 except:
     from diffusers_attention import CrossAttention
-    from resnet import Downsample3D, Upsample3D, InflatedConv3d, ResnetBlock3D, ResnetBlock3DCNN
+    from resnet import (
+        Downsample3D,
+        Upsample3D,
+        InflatedConv3d,
+        ResnetBlock3D,
+        ResnetBlock3DCNN,
+    )
 
 from einops import rearrange, repeat
 import math
@@ -39,7 +53,13 @@ def zero_module(module):
 
 
 def grid_sample_align(input, grid):
-    return torch.nn.functional.grid_sample(input=input, grid=grid, mode='bilinear', padding_mode='zeros', align_corners=True)
+    return torch.nn.functional.grid_sample(
+        input=input,
+        grid=grid,
+        mode="bilinear",
+        padding_mode="zeros",
+        align_corners=True,
+    )
 
 
 @dataclass
@@ -58,7 +78,15 @@ class EmptyTemporalModule3D(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, hidden_states, condition_video=None, encoder_hidden_states=None, timesteps=None, temb=None, attention_mask=None):
+    def forward(
+        self,
+        hidden_states,
+        condition_video=None,
+        encoder_hidden_states=None,
+        timesteps=None,
+        temb=None,
+        attention_mask=None,
+    ):
         return hidden_states
 
 
@@ -67,31 +95,25 @@ class TemporalModule3D(nn.Module):
         self,
         in_channels=None,
         out_channels=None,
-
         num_attention_layers=None,
         num_attention_head=8,
         attention_head_dim=None,
         cross_attention_dim=768,
         temb_channels=512,
-
-        dropout=0.,
+        dropout=0.0,
         attention_bias=False,
         activation_fn="geglu",
         only_cross_attention=False,
         upcast_attention=False,
-
         norm_num_groups=8,
         use_linear_projection=True,
-        use_scale_shift=False, # set True always produce nan loss, I don't know why
-
-        attention_block_types: Tuple[str]=None,
+        use_scale_shift=False,  # set True always produce nan loss, I don't know why
+        attention_block_types: Tuple[str] = None,
         cross_frame_attention_mode=None,
         temporal_shift_fold_div=None,
         temporal_shift_direction=None,
-
         use_dcn_warpping=None,
         use_deformable_conv=None,
-
         attention_dim_div: int = None,
         video_condition=False,
     ):
@@ -100,25 +122,50 @@ class TemporalModule3D(nn.Module):
 
         self.use_scale_shift = use_scale_shift
         self.video_condition = video_condition
-        
+
         self.non_linearity = nn.SiLU()
-        
+
         # 1. 3d cnn
         if self.video_condition:
-            video_condition_dim = int(out_channels//4)
-            self.v_cond_conv = ResnetBlock3D(in_channels=3, out_channels=video_condition_dim, temb_channels=temb_channels, groups=3, groups_out=32)
-            self.resblocks_3d_t = ResnetBlock3DCNN(in_channels=in_channels+video_condition_dim, out_channels=in_channels, kernel=(5,1,1), temb_channels=temb_channels)
+            video_condition_dim = int(out_channels // 4)
+            self.v_cond_conv = ResnetBlock3D(
+                in_channels=3,
+                out_channels=video_condition_dim,
+                temb_channels=temb_channels,
+                groups=3,
+                groups_out=32,
+            )
+            self.resblocks_3d_t = ResnetBlock3DCNN(
+                in_channels=in_channels + video_condition_dim,
+                out_channels=in_channels,
+                kernel=(5, 1, 1),
+                temb_channels=temb_channels,
+            )
         else:
-            self.resblocks_3d_t = ResnetBlock3DCNN(in_channels=in_channels, out_channels=in_channels, kernel=(5,1,1), temb_channels=temb_channels)
-        
-        self.resblocks_3d_s = ResnetBlock3D(in_channels=in_channels, out_channels=in_channels, temb_channels=temb_channels, groups=32, groups_out=32)
-        
+            self.resblocks_3d_t = ResnetBlock3DCNN(
+                in_channels=in_channels,
+                out_channels=in_channels,
+                kernel=(5, 1, 1),
+                temb_channels=temb_channels,
+            )
+
+        self.resblocks_3d_s = ResnetBlock3D(
+            in_channels=in_channels,
+            out_channels=in_channels,
+            temb_channels=temb_channels,
+            groups=32,
+            groups_out=32,
+        )
+
         # 2. transformer blocks
-        if not (attention_block_types[0]=='' and attention_block_types[1]==''):
+        if not (attention_block_types[0] == "" and attention_block_types[1] == ""):
             attentions = TemporalTransformer3DModel(
                 num_attention_heads=num_attention_head,
-                attention_head_dim=attention_head_dim if attention_head_dim is not None else in_channels // num_attention_head // attention_dim_div,
-
+                attention_head_dim=(
+                    attention_head_dim
+                    if attention_head_dim is not None
+                    else in_channels // num_attention_head // attention_dim_div
+                ),
                 in_channels=in_channels,
                 num_layers=num_attention_layers,
                 dropout=dropout,
@@ -126,31 +173,51 @@ class TemporalModule3D(nn.Module):
                 cross_attention_dim=cross_attention_dim,
                 attention_bias=attention_bias,
                 activation_fn=activation_fn,
-                num_embeds_ada_norm=1000, # adaptive norm for timestep embedding injection
+                num_embeds_ada_norm=1000,  # adaptive norm for timestep embedding injection
                 use_linear_projection=use_linear_projection,
-
                 only_cross_attention=only_cross_attention,
                 upcast_attention=upcast_attention,
-
                 attention_block_types=attention_block_types,
                 cross_frame_attention_mode=cross_frame_attention_mode,
                 temporal_shift_fold_div=temporal_shift_fold_div,
                 temporal_shift_direction=temporal_shift_direction,
-
                 use_dcn_warpping=use_dcn_warpping,
                 use_deformable_conv=use_deformable_conv,
             )
             self.attentions = nn.ModuleList([attentions])
 
         if use_scale_shift:
-            self.scale_shift_conv = zero_module(InflatedConv3d(in_channels=in_channels, out_channels=in_channels * 2, kernel_size=1, stride=1, padding=0))
+            self.scale_shift_conv = zero_module(
+                InflatedConv3d(
+                    in_channels=in_channels,
+                    out_channels=in_channels * 2,
+                    kernel_size=1,
+                    stride=1,
+                    padding=0,
+                )
+            )
         else:
-            self.shift_conv = zero_module(InflatedConv3d(in_channels=in_channels, out_channels=in_channels, kernel_size=1, stride=1, padding=0))
+            self.shift_conv = zero_module(
+                InflatedConv3d(
+                    in_channels=in_channels,
+                    out_channels=in_channels,
+                    kernel_size=1,
+                    stride=1,
+                    padding=0,
+                )
+            )
 
-
-    def forward(self, hidden_states, condition_video=None, encoder_hidden_states=None, timesteps=None, temb=None, attention_mask=None):
+    def forward(
+        self,
+        hidden_states,
+        condition_video=None,
+        encoder_hidden_states=None,
+        timesteps=None,
+        temb=None,
+        attention_mask=None,
+    ):
         input_tensor = hidden_states
-        
+
         if self.video_condition:
             # obtain video attention
             assert condition_video is not None
@@ -158,14 +225,18 @@ class TemporalModule3D(nn.Module):
                 condition_video = condition_video[hidden_states.shape[-1]]
             hidden_condition = self.v_cond_conv(condition_video, temb)
             hidden_states = torch.cat([hidden_states, hidden_condition], dim=1)
-            
+
         # 3DCNN
         hidden_states = self.resblocks_3d_t(hidden_states, temb)
         hidden_states = self.resblocks_3d_s(hidden_states, temb)
-        
+
         if hasattr(self, "attentions"):
             for attn in self.attentions:
-                hidden_states = attn(hidden_states, encoder_hidden_states=encoder_hidden_states, timestep=timesteps).sample
+                hidden_states = attn(
+                    hidden_states,
+                    encoder_hidden_states=encoder_hidden_states,
+                    timestep=timesteps,
+                ).sample
 
         if self.use_scale_shift:
             hidden_states = self.scale_shift_conv(hidden_states)
@@ -195,12 +266,10 @@ class TemporalTransformer3DModel(ModelMixin, ConfigMixin):
         use_linear_projection=None,
         only_cross_attention=None,
         upcast_attention=None,
-
         attention_block_types=None,
         cross_frame_attention_mode=None,
         temporal_shift_fold_div=None,
         temporal_shift_direction=None,
-
         use_dcn_warpping=None,
         use_deformable_conv=None,
     ):
@@ -213,11 +282,15 @@ class TemporalTransformer3DModel(ModelMixin, ConfigMixin):
         # Define input layers
         self.in_channels = in_channels
 
-        self.norm = torch.nn.GroupNorm(num_groups=norm_num_groups, num_channels=in_channels, eps=1e-6, affine=True)
+        self.norm = torch.nn.GroupNorm(
+            num_groups=norm_num_groups, num_channels=in_channels, eps=1e-6, affine=True
+        )
         if use_linear_projection:
             self.proj_in = nn.Linear(in_channels, inner_dim)
         else:
-            self.proj_in = nn.Conv2d(in_channels, inner_dim, kernel_size=1, stride=1, padding=0)
+            self.proj_in = nn.Conv2d(
+                in_channels, inner_dim, kernel_size=1, stride=1, padding=0
+            )
 
         # Define transformers blocks
         self.transformer_blocks = nn.ModuleList(
@@ -233,12 +306,10 @@ class TemporalTransformer3DModel(ModelMixin, ConfigMixin):
                     attention_bias=attention_bias,
                     only_cross_attention=only_cross_attention,
                     upcast_attention=upcast_attention,
-
                     attention_block_types=attention_block_types,
                     cross_frame_attention_mode=cross_frame_attention_mode,
                     temporal_shift_fold_div=temporal_shift_fold_div,
                     temporal_shift_direction=temporal_shift_direction,
-
                     use_dcn_warpping=use_dcn_warpping,
                     use_deformable_conv=use_deformable_conv,
                 )
@@ -250,15 +321,27 @@ class TemporalTransformer3DModel(ModelMixin, ConfigMixin):
         if use_linear_projection:
             self.proj_out = nn.Linear(inner_dim, in_channels)
         else:
-            self.proj_out = nn.Conv2d(inner_dim, in_channels, kernel_size=1, stride=1, padding=0)
+            self.proj_out = nn.Conv2d(
+                inner_dim, in_channels, kernel_size=1, stride=1, padding=0
+            )
 
-    def forward(self, hidden_states, encoder_hidden_states=None, timestep=None, return_dict: bool = True):
+    def forward(
+        self,
+        hidden_states,
+        encoder_hidden_states=None,
+        timestep=None,
+        return_dict: bool = True,
+    ):
         # Input
-        assert hidden_states.dim() == 5, f"Expected hidden_states to have ndim=5, but got ndim={hidden_states.dim()}."
+        assert (
+            hidden_states.dim() == 5
+        ), f"Expected hidden_states to have ndim=5, but got ndim={hidden_states.dim()}."
         video_length = hidden_states.shape[2]
         hidden_states = rearrange(hidden_states, "b c f h w -> (b f) c h w")
         if encoder_hidden_states is not None:
-            encoder_hidden_states = repeat(encoder_hidden_states, 'b n c -> (b f) n c', f=video_length)
+            encoder_hidden_states = repeat(
+                encoder_hidden_states, "b n c -> (b f) n c", f=video_length
+            )
 
         batch, channel, height, weight = hidden_states.shape
         residual = hidden_states
@@ -267,10 +350,14 @@ class TemporalTransformer3DModel(ModelMixin, ConfigMixin):
         if not self.use_linear_projection:
             hidden_states = self.proj_in(hidden_states)
             inner_dim = hidden_states.shape[1]
-            hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(batch, height * weight, inner_dim)
+            hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(
+                batch, height * weight, inner_dim
+            )
         else:
             inner_dim = hidden_states.shape[1]
-            hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(batch, height * weight, inner_dim)
+            hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(
+                batch, height * weight, inner_dim
+            )
             hidden_states = self.proj_in(hidden_states)
 
         # Blocks
@@ -279,19 +366,23 @@ class TemporalTransformer3DModel(ModelMixin, ConfigMixin):
                 hidden_states,
                 encoder_hidden_states=encoder_hidden_states,
                 timestep=timestep,
-                video_length=video_length
+                video_length=video_length,
             )
 
         # Output
         if not self.use_linear_projection:
             hidden_states = (
-                hidden_states.reshape(batch, height, weight, inner_dim).permute(0, 3, 1, 2).contiguous()
+                hidden_states.reshape(batch, height, weight, inner_dim)
+                .permute(0, 3, 1, 2)
+                .contiguous()
             )
             hidden_states = self.proj_out(hidden_states)
         else:
             hidden_states = self.proj_out(hidden_states)
             hidden_states = (
-                hidden_states.reshape(batch, height, weight, inner_dim).permute(0, 3, 1, 2).contiguous()
+                hidden_states.reshape(batch, height, weight, inner_dim)
+                .permute(0, 3, 1, 2)
+                .contiguous()
             )
 
         output = hidden_states + residual
@@ -316,12 +407,10 @@ class TemporalTransformerBlock(nn.Module):
         attention_bias=None,
         only_cross_attention=None,
         upcast_attention=None,
-
         attention_block_types=None,
         cross_frame_attention_mode=None,
         temporal_shift_fold_div=None,
         temporal_shift_direction=None,
-
         use_dcn_warpping=None,
         use_deformable_conv=None,
     ):
@@ -333,53 +422,62 @@ class TemporalTransformerBlock(nn.Module):
         self.use_dcn_warpping = use_dcn_warpping
 
         # 1. Spatial-Attn (self)
-        if not attention_block_types[0] == '':
+        if not attention_block_types[0] == "":
             self.attn_spatial = VersatileSelfAttention(
                 attention_mode=attention_block_types[0],
-
                 query_dim=dim,
                 heads=num_attention_heads,
                 dim_head=attention_head_dim,
                 dropout=dropout,
                 bias=attention_bias,
                 upcast_attention=upcast_attention,
-
                 cross_frame_attention_mode=cross_frame_attention_mode,
                 temporal_shift_fold_div=temporal_shift_fold_div,
                 temporal_shift_direction=temporal_shift_direction,
             )
             nn.init.zeros_(self.attn_spatial.to_out[0].weight.data)
-            self.norm1 = AdaLayerNorm(dim, num_embeds_ada_norm) if self.use_ada_layer_norm else nn.LayerNorm(dim)
+            self.norm1 = (
+                AdaLayerNorm(dim, num_embeds_ada_norm)
+                if self.use_ada_layer_norm
+                else nn.LayerNorm(dim)
+            )
 
         # 2. Temporal-Attn (self)
         self.attn_temporal = VersatileSelfAttention(
             attention_mode=attention_block_types[1],
-
             query_dim=dim,
             heads=num_attention_heads,
             dim_head=attention_head_dim,
             dropout=dropout,
             bias=attention_bias,
             upcast_attention=upcast_attention,
-
             cross_frame_attention_mode=cross_frame_attention_mode,
             temporal_shift_fold_div=temporal_shift_fold_div,
             temporal_shift_direction=temporal_shift_direction,
         )
         nn.init.zeros_(self.attn_temporal.to_out[0].weight.data)
-        self.norm2 = AdaLayerNorm(dim, num_embeds_ada_norm) if self.use_ada_layer_norm else nn.LayerNorm(dim)
+        self.norm2 = (
+            AdaLayerNorm(dim, num_embeds_ada_norm)
+            if self.use_ada_layer_norm
+            else nn.LayerNorm(dim)
+        )
 
-        self.dcn_module = WarpModule(
-            in_channels=dim,
-            use_deformable_conv=use_deformable_conv,
-        ) if use_dcn_warpping else None
+        self.dcn_module = (
+            WarpModule(
+                in_channels=dim,
+                use_deformable_conv=use_deformable_conv,
+            )
+            if use_dcn_warpping
+            else None
+        )
 
         # 3. Feed-forward
         self.ff = FeedForward(dim, dropout=dropout, activation_fn=activation_fn)
         self.norm3 = nn.LayerNorm(dim)
 
-
-    def set_use_memory_efficient_attention_xformers(self, use_memory_efficient_attention_xformers: bool, attention_op: None):
+    def set_use_memory_efficient_attention_xformers(
+        self, use_memory_efficient_attention_xformers: bool, attention_op: None
+    ):
         if not is_xformers_available():
             print("Here is how to install it")
             raise ModuleNotFoundError(
@@ -403,22 +501,57 @@ class TemporalTransformerBlock(nn.Module):
             except Exception as e:
                 raise e
             if hasattr(self, "attn_spatial"):
-                self.attn_spatial._use_memory_efficient_attention_xformers = use_memory_efficient_attention_xformers
+                self.attn_spatial._use_memory_efficient_attention_xformers = (
+                    use_memory_efficient_attention_xformers
+                )
 
-    def forward(self, hidden_states, encoder_hidden_states=None, timestep=None, attention_mask=None, video_length=None):
+    def forward(
+        self,
+        hidden_states,
+        encoder_hidden_states=None,
+        timestep=None,
+        attention_mask=None,
+        video_length=None,
+    ):
         # 1. Spatial-Attention
         if hasattr(self, "attn_spatial") and hasattr(self, "norm1"):
-            norm_hidden_states = self.norm1(hidden_states, timestep) if self.use_ada_layer_norm else self.norm1(hidden_states)
-            hidden_states = self.attn_spatial(norm_hidden_states, attention_mask=attention_mask, video_length=video_length) + hidden_states
+            norm_hidden_states = (
+                self.norm1(hidden_states, timestep)
+                if self.use_ada_layer_norm
+                else self.norm1(hidden_states)
+            )
+            hidden_states = (
+                self.attn_spatial(
+                    norm_hidden_states,
+                    attention_mask=attention_mask,
+                    video_length=video_length,
+                )
+                + hidden_states
+            )
 
         # 2. Temporal-Attention
-        norm_hidden_states = self.norm2(hidden_states, timestep) if self.use_ada_layer_norm else self.norm2(hidden_states)
+        norm_hidden_states = (
+            self.norm2(hidden_states, timestep)
+            if self.use_ada_layer_norm
+            else self.norm2(hidden_states)
+        )
         if not self.use_dcn_warpping:
-            hidden_states = self.attn_temporal(norm_hidden_states, attention_mask=attention_mask, video_length=video_length) + hidden_states
+            hidden_states = (
+                self.attn_temporal(
+                    norm_hidden_states,
+                    attention_mask=attention_mask,
+                    video_length=video_length,
+                )
+                + hidden_states
+            )
         else:
             hidden_states = self.dcn_module(
-                hidden_states, 
-                offset_hidden_states=self.attn_temporal(norm_hidden_states, attention_mask=attention_mask, video_length=video_length),
+                hidden_states,
+                offset_hidden_states=self.attn_temporal(
+                    norm_hidden_states,
+                    attention_mask=attention_mask,
+                    video_length=video_length,
+                ),
             )
 
         # 3. Feed-forward
@@ -429,18 +562,31 @@ class TemporalTransformerBlock(nn.Module):
 
 class VersatileSelfAttention(CrossAttention):
     def __init__(
-            self,
-            attention_mode=None,
-            cross_frame_attention_mode=None,
-            temporal_shift_fold_div=None,
-            temporal_shift_direction=None,
-            temporal_position_encoding=False,
-            temporal_position_encoding_max_len=24,
-            *args, **kwargs
-        ):
+        self,
+        attention_mode=None,
+        cross_frame_attention_mode=None,
+        temporal_shift_fold_div=None,
+        temporal_shift_direction=None,
+        temporal_position_encoding=False,
+        temporal_position_encoding_max_len=24,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
-        assert attention_mode in ("Temporal", "Spatial", "CrossFrame", "SpatialTemporalShift", None)
-        assert cross_frame_attention_mode in ("0_i-1", "i-1_i", "0_i-1_i", "i-1_i_i+1", None)
+        assert attention_mode in (
+            "Temporal",
+            "Spatial",
+            "CrossFrame",
+            "SpatialTemporalShift",
+            None,
+        )
+        assert cross_frame_attention_mode in (
+            "0_i-1",
+            "i-1_i",
+            "0_i-1_i",
+            "i-1_i_i+1",
+            None,
+        )
 
         self.attention_mode = attention_mode
 
@@ -448,19 +594,23 @@ class VersatileSelfAttention(CrossAttention):
 
         self.temporal_shift_fold_div = temporal_shift_fold_div
         self.temporal_shift_direction = temporal_shift_direction
-        
-        self.pos_encoder = PositionalEncoding(
-            kwargs["query_dim"], 
-            dropout=0., 
-            max_len=temporal_position_encoding_max_len
-        ) if temporal_position_encoding else None
+
+        self.pos_encoder = (
+            PositionalEncoding(
+                kwargs["query_dim"],
+                dropout=0.0,
+                max_len=temporal_position_encoding_max_len,
+            )
+            if temporal_position_encoding
+            else None
+        )
 
     def temporal_token_concat(self, tensor, video_length):
         # print("### temporal token concat")
         current_frame_index = torch.arange(video_length)
         former_frame_index = current_frame_index - 1
         former_frame_index[0] = 0
-        
+
         later_frame_index = current_frame_index + 1
         later_frame_index[-1] = -1
 
@@ -468,16 +618,34 @@ class VersatileSelfAttention(CrossAttention):
         tensor = rearrange(tensor, "(b f) d c -> b f d c", f=video_length)
 
         if self.cross_frame_attention_mode == "0_i-1":
-            tensor = torch.cat([tensor[:, [0] * video_length], tensor[:, former_frame_index]], dim=2)
+            tensor = torch.cat(
+                [tensor[:, [0] * video_length], tensor[:, former_frame_index]], dim=2
+            )
         elif self.cross_frame_attention_mode == "i-1_i":
-            tensor = torch.cat([tensor[:, former_frame_index], tensor[:, current_frame_index]], dim=2)
+            tensor = torch.cat(
+                [tensor[:, former_frame_index], tensor[:, current_frame_index]], dim=2
+            )
         elif self.cross_frame_attention_mode == "0_i-1_i":
-            tensor = torch.cat([tensor[:, [0] * video_length], tensor[:, former_frame_index], tensor[:, current_frame_index]], dim=2)
+            tensor = torch.cat(
+                [
+                    tensor[:, [0] * video_length],
+                    tensor[:, former_frame_index],
+                    tensor[:, current_frame_index],
+                ],
+                dim=2,
+            )
         elif self.cross_frame_attention_mode == "i-1_i_i+1":
-            tensor = torch.cat([tensor[:, former_frame_index], tensor[:, current_frame_index], tensor[:, later_frame_index]], dim=2)
+            tensor = torch.cat(
+                [
+                    tensor[:, former_frame_index],
+                    tensor[:, current_frame_index],
+                    tensor[:, later_frame_index],
+                ],
+                dim=2,
+            )
         else:
-            raise NotImplementedError        
-        
+            raise NotImplementedError
+
         tensor = rearrange(tensor, "b f d c -> (b f) d c")
         return tensor
 
@@ -490,15 +658,21 @@ class VersatileSelfAttention(CrossAttention):
 
         if self.temporal_shift_direction != "right":
             raise NotImplementedError
-        
+
         tensor_out = torch.zeros_like(tensor)
         tensor_out[:, 1:, :, :fold] = tensor[:, :-1, :, :fold]
-        tensor_out[:, :, :, fold:]  = tensor[:, :, :, fold:]
+        tensor_out[:, :, :, fold:] = tensor[:, :, :, fold:]
 
         tensor_out = rearrange(tensor_out, "b f d c -> (b f) d c")
         return tensor_out
 
-    def forward(self, hidden_states, encoder_hidden_states=None, attention_mask=None, video_length=None):
+    def forward(
+        self,
+        hidden_states,
+        encoder_hidden_states=None,
+        attention_mask=None,
+        video_length=None,
+    ):
         # pdb.set_trace()
         batch_size, sequence_length, _ = hidden_states.shape
         assert encoder_hidden_states is None
@@ -507,15 +681,19 @@ class VersatileSelfAttention(CrossAttention):
         if self.attention_mode == "Temporal":
             # print("### temporal reshape")
             d = hidden_states.shape[1]
-            hidden_states = rearrange(hidden_states, "(b f) d c -> (b d) f c", f=video_length)
-            
+            hidden_states = rearrange(
+                hidden_states, "(b f) d c -> (b d) f c", f=video_length
+            )
+
             if self.pos_encoder is not None:
                 hidden_states = self.pos_encoder(hidden_states)
 
         encoder_hidden_states = encoder_hidden_states
 
         if self.group_norm is not None:
-            hidden_states = self.group_norm(hidden_states.transpose(1, 2)).transpose(1, 2)
+            hidden_states = self.group_norm(hidden_states.transpose(1, 2)).transpose(
+                1, 2
+            )
 
         query = self.to_q(hidden_states)
         dim = query.shape[-1]
@@ -524,7 +702,11 @@ class VersatileSelfAttention(CrossAttention):
         if self.added_kv_proj_dim is not None:
             raise NotImplementedError
 
-        encoder_hidden_states = encoder_hidden_states if encoder_hidden_states is not None else hidden_states
+        encoder_hidden_states = (
+            encoder_hidden_states
+            if encoder_hidden_states is not None
+            else hidden_states
+        )
         key = self.to_k(encoder_hidden_states)
         value = self.to_v(encoder_hidden_states)
 
@@ -546,14 +728,18 @@ class VersatileSelfAttention(CrossAttention):
 
         # attention, what we cannot get enough of
         if self._use_memory_efficient_attention_xformers:
-            hidden_states = self._memory_efficient_attention_xformers(query, key, value, attention_mask)
+            hidden_states = self._memory_efficient_attention_xformers(
+                query, key, value, attention_mask
+            )
             # Some versions of xformers return output in fp32, cast it back to the dtype of the input
             hidden_states = hidden_states.to(query.dtype)
         else:
             if self._slice_size is None or query.shape[0] // self._slice_size == 1:
                 hidden_states = self._attention(query, key, value, attention_mask)
             else:
-                hidden_states = self._sliced_attention(query, key, value, sequence_length, dim, attention_mask)
+                hidden_states = self._sliced_attention(
+                    query, key, value, sequence_length, dim, attention_mask
+                )
 
         # linear proj
         hidden_states = self.to_out[0](hidden_states)
@@ -579,26 +765,37 @@ class WarpModule(nn.Module):
         self.conv = None
         self.dcn_weight = None
         if use_deformable_conv:
-            self.conv = nn.Conv2d(in_channels*2, 27, kernel_size=3, stride=1, padding=1)
-            self.dcn_weight = nn.Parameter(torch.randn(in_channels, in_channels, 3, 3) / np.sqrt(in_channels * 3 * 3))
+            self.conv = nn.Conv2d(
+                in_channels * 2, 27, kernel_size=3, stride=1, padding=1
+            )
+            self.dcn_weight = nn.Parameter(
+                torch.randn(in_channels, in_channels, 3, 3)
+                / np.sqrt(in_channels * 3 * 3)
+            )
             self.alpha = nn.Parameter(torch.zeros(1, in_channels, 1, 1))
         else:
-            self.conv = zero_module(nn.Conv2d(in_channels, 2, kernel_size=3, stride=1, padding=1))
+            self.conv = zero_module(
+                nn.Conv2d(in_channels, 2, kernel_size=3, stride=1, padding=1)
+            )
 
     def forward(self, hidden_states, offset_hidden_states):
         # (b f) d c
         spatial_dim = hidden_states.shape[1]
-        size = int(spatial_dim ** 0.5)
-        assert size ** 2 == spatial_dim
+        size = int(spatial_dim**0.5)
+        assert size**2 == spatial_dim
 
         hidden_states = rearrange(hidden_states, "b (h w) c -> b c h w", h=size)
-        offset_hidden_states = rearrange(offset_hidden_states, "b (h w) c -> b c h w", h=size)
-        
+        offset_hidden_states = rearrange(
+            offset_hidden_states, "b (h w) c -> b c h w", h=size
+        )
+
         concat_hidden_states = torch.cat([hidden_states, offset_hidden_states], dim=1)
 
         input_tensor = hidden_states
         if self.use_deformable_conv:
-            offset_x, offset_y, offsets_mask = torch.chunk(self.conv(concat_hidden_states), chunks=3, dim=1)
+            offset_x, offset_y, offsets_mask = torch.chunk(
+                self.conv(concat_hidden_states), chunks=3, dim=1
+            )
             offsets_mask = offsets_mask.sigmoid() * 2
             offsets = torch.cat([offset_x, offset_y], dim=1)
             hidden_states = torchvision.ops.deform_conv2d(
@@ -648,12 +845,12 @@ class WarpModule(nn.Module):
         vgrid = vgrid.permute(0, 2, 3, 1)
         # output = grid_sample_gradfix.grid_sample_align(x, vgrid)
         output = grid_sample_align(x, vgrid)
-        #output = torch.nn.functional.grid_sample(x, vgrid, padding_mode='zeros', mode='bilinear', align_corners=True)
+        # output = torch.nn.functional.grid_sample(x, vgrid, padding_mode='zeros', mode='bilinear', align_corners=True)
 
         mask = torch.ones_like(x)
         # mask = grid_sample_gradfix.grid_sample_align(mask, vgrid)
         mask = grid_sample_align(x, vgrid)
-        #mask = torch.nn.functional.grid_sample(mask, vgrid, padding_mode='zeros', mode='bilinear', align_corners=True)
+        # mask = torch.nn.functional.grid_sample(mask, vgrid, padding_mode='zeros', mode='bilinear', align_corners=True)
 
         mask[mask < 0.9999] = 0
         mask[mask > 0] = 1
@@ -667,6 +864,7 @@ class AdaLayerNorm(nn.Module):
     """
     Norm layer modified to incorporate timestep embeddings.
     """
+
     def __init__(self, embedding_dim, num_embeddings):
         super().__init__()
         self.emb = nn.Embedding(num_embeddings, embedding_dim)
@@ -677,8 +875,7 @@ class AdaLayerNorm(nn.Module):
     def forward(self, x, timestep):
         timestep = repeat(timestep, "b -> (b r)", r=x.shape[0] // timestep.shape[0])
 
-        emb = self.linear(self.silu(self.emb(timestep))).unsqueeze(1) # (b f) 1 2d
+        emb = self.linear(self.silu(self.emb(timestep))).unsqueeze(1)  # (b f) 1 2d
         scale, shift = torch.chunk(emb, 2, dim=-1)
         x = self.norm(x) * (1 + scale) + shift
         return x
-

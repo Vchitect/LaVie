@@ -106,9 +106,7 @@ class SpacedDiffusion(GaussianDiffusion):
     def _wrap_model(self, model):
         if isinstance(model, _WrappedModel):
             return model
-        return _WrappedModel(
-            model, self.timestep_map, self.original_num_steps
-        )
+        return _WrappedModel(model, self.timestep_map, self.original_num_steps)
 
     def _scale_timesteps(self, t):
         # Scaling is done by the wrapped model.

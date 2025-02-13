@@ -19,6 +19,7 @@ You can safely ignore the warning, it is not an error.
 This clip usage is from U-ViT and same with Stable Diffusion.
 """
 
+
 class AbstractEncoder(nn.Module):
     def __init__(self):
         super().__init__()
@@ -29,14 +30,17 @@ class AbstractEncoder(nn.Module):
 
 class FrozenCLIPEmbedder(AbstractEncoder):
     """Uses the CLIP transformer encoder for text (from Hugging Face)"""
+
     def __init__(self, device="cuda", max_length=77):
         super().__init__()
         # self.tokenizer = CLIPTokenizer.from_pretrained('laion/CLIP-ViT-H-14-laion2B-s32B-b79K')
         # self.text_encoder = CLIPTextModel.from_pretrained('laion/CLIP-ViT-H-14-laion2B-s32B-b79K')
-        # TBD: change to https://huggingface.co/laion/CLIP-ViT-H-14-laion2B-s32B-b79K/blob/main/config.json 
+        # TBD: change to https://huggingface.co/laion/CLIP-ViT-H-14-laion2B-s32B-b79K/blob/main/config.json
         # model_id = "stabilityai/stable-diffusion-x4-upscaler" # For VSR
         # upscale_pipeline = StableDiffusionUpscalePipeline.from_pretrained(model_id)
-        upscale_pipeline = StableDiffusionUpscalePipeline.from_pretrained('./pretrained_models/upscaler4x')
+        upscale_pipeline = StableDiffusionUpscalePipeline.from_pretrained(
+            "./pretrained_models/upscaler4x"
+        )
         self.tokenizer = upscale_pipeline.tokenizer
         self.text_encoder = upscale_pipeline.text_encoder
         self.device = device
@@ -49,8 +53,13 @@ class FrozenCLIPEmbedder(AbstractEncoder):
             param.requires_grad = False
 
     def forward(self, text):
-        batch_encoding = self.tokenizer(text, truncation=True, padding="max_length", max_length=self.max_length,
-                                        return_tensors="pt")
+        batch_encoding = self.tokenizer(
+            text,
+            truncation=True,
+            padding="max_length",
+            max_length=self.max_length,
+            return_tensors="pt",
+        )
         tokens = batch_encoding["input_ids"].to(self.device)
         outputs = self.text_encoder(input_ids=tokens)
 
@@ -59,17 +68,18 @@ class FrozenCLIPEmbedder(AbstractEncoder):
 
     def encode(self, text):
         return self(text)
-    
+
 
 class TextEmbedder(nn.Module):
     """
     Embeds text prompt into vector representations. Also handles text dropout for classifier-free guidance.
     """
+
     def __init__(self, dropout_prob=0.1):
         super().__init__()
         self.text_encodder = FrozenCLIPEmbedder()
         self.dropout_prob = dropout_prob
-    
+
     def token_drop(self, text_prompts, force_drop_ids=None):
         """
         Drops text to enable classifier-free guidance.
@@ -88,9 +98,9 @@ class TextEmbedder(nn.Module):
             text_prompts = self.token_drop(text_prompts, force_drop_ids)
         embeddings = self.text_encodder(text_prompts)
         return embeddings
-    
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
 
     r"""
     Returns:
@@ -117,11 +127,11 @@ if __name__ == '__main__':
     text_encoder = TextEmbedder(dropout_prob=0.00001).to(device)
     text_encoder1 = FrozenCLIPEmbedder().to(device)
 
-    text_prompt = ["a photo of a cat", "a photo of a dog", 'a photo of a dog human']
+    text_prompt = ["a photo of a cat", "a photo of a dog", "a photo of a dog human"]
     # text_prompt = ('None', 'None', 'None')
     output = text_encoder(text_prompts=text_prompt, train=True)
     output1 = text_encoder1(text_prompt)
     # print(output)
     print(output.shape)
     print(output1.shape)
-    print((output==output1).all())
+    print((output == output1).all())
