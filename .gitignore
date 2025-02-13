@@ -1,1 +1,15 @@
 *.gif
+
+# pycache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+
+# results
+res/*
+
+# checkpoints
+*.pt
